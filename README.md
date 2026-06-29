@@ -7,8 +7,8 @@ A platform that connects volunteers with NGOs(organizations and community servic
 - Sujan Timalsina
 
 ## Technology Stack
-- HTML
-- CSS
+- HTML(Vanilla)
+- CSS(vanilla)
 - JavaScript
 - PHP
 - MySQL
