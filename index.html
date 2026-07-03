@@ -3,97 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>volunteer connect</title>
-  <!--css-->
-  <link rel = "stylesheet" href="style.css">
-  <!--cdnjs, font awsome icons-->
-  <link rel="stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <title>Volunteer Connect</title>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!--header part-->
+  <!-- Header / Navigation -->
   <header>
-    <!--logo-->
-<nav class="navbar container">
-  <div class="logo">
-    <a href= "#" class="logo-txt">
-    Volunteer<span>connect.</span>
-  </a>
-  </div>
-  <ul class="navlist">
-    <li>
-      <a href="#" class="navlinks active">Home</a>
-    </li>
-    <li>
-      <a href="#" class="navlinks">About</a>
-    </li>
-    <li>
-      <a href="#" class="navlinks">Opportunities</a>
-    </li>
-    <li>
-      <a href="#" class="navlinks">Contact</a>
-    </li>
-  </ul>
-  
-  <div class="nav-icons">
-    <!--user icon-->
-    <a href="#" class="icons-link">
-      <i class="fa-solid fa-user"></i>
-    </a>
-    <!--volunteer icon-->
-     <a href="#" class="icons-link">
-<i class="fa-solid fa-hand-holding-heart"></i>    </a>
-  </div>
-
-  <div class="hamburger">
-      <div class="burger"></div>
-      <div class="burger"></div>
-      <div class="burger"></div>
+    <nav class="navbar container">
+      <div class="logo">
+        <a href="#" class="logo-txt"><span>Volunteer</span>Connect.</a>
       </div>
-</nav>
+      
+      <!-- Center Links Navigation -->
+      <ul class="navlist" id="navlist">
+        <li><a href="index.html" class="navlinks active">Home</a></li>
+        <li><a href="#steps-section" class="navlinks">How it Works</a></li>
+        <li><a href="portal.html" class="navlinks">Opportunities</a></li>
+        <li><a href="#" class="navlinks">Contact</a></li>
+      </ul>
+      
+      <div class="nav-icons" id="nav-icons">
+        <a href="portal.html" class="icons-link" title="Login Portal">
+          <i class="fa-solid fa-user"></i>
+        </a>
+        <a href="#" class="icons-link" title="Volunteer Now">
+          <i class="fa-solid fa-hand-holding-heart"></i>
+        </a>
+      </div>
+
+      <div class="hamburger" id="hamburger" aria-label="Toggle Menu">
+        <div class="burger"></div>
+        <div class="burger"></div>
+        <div class="burger"></div>
+      </div>
+    </nav>
   </header>
 
-  <!--sections part-->
+  <!-- Main Content -->
   <main>
-    <!-- hero section -->
-  <section class="hero-section container">
-    <div class="content">
-      <div class="watch">
-      <a href="#" class="icons-link">
-        <i class="fa-solid fa-play"></i>
-      </a>
-      <h3>Volunteer Connect</h3>
+    <!-- Hero Section -->
+    <section class="hero-section container">
+      <div class="content">
+        <div class="watch">
+          <a href="#" class="icons-link">
+            <i class="fa-solid fa-play"></i>
+          </a>
+          <h3>Volunteer Connect</h3>
+        </div>
+        <h1><span>Connect.</span><br>Contribute.<br><span>Transform.</span></h1>
+        <p>Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities that align with your skills and values.</p>
+        <div class="btn-container">
+          <button class="btn-primary">Find Opportunities</button>
+          <button data-type="bordered-btn">Join as Volunteer </button>
+        
+
+        </div>
       </div>
-      <h1><span>Connect.</span><br>Contribute.<br><span>Transform.</span></h1>
-      <p>Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities that align with your skills and values.</p>
-    <div class="btn-container">
-      <button>Find Oppurtunities</button>
-      <button data-type="bordered-btn">Join as Volunteer</button>
-    </div>
-    </div>
 
-    <div class="image-container">
-    <img src="images/Volunteer-work-Nepal.webp">
-  </div>
-  </section>
+      <div class="image-container">
+        <img src="images/Green-Earth.png" alt="Volunteers shaking hands around the globe">
+      </div>
+    </section>
 
-  <!-- second page -->
-   <section class="other-section">
-   <div class="comumn-container">
-    <h2> Simple Steps to Make Impact</h2>
-    <p data-type="centered-txt">Whether you're a volunteer looking to give back or an organization seeking dedicated helpers, we've streamlined the process.
-</p>
-<div class="card-container">
-  <div class="card">
-    <img src= "images/scout.png"
-  </div>
-</div>
-   </div>
-</section>
+     <!-- NEW HOW-TO-START STEPS SECTION -->
+    <section id="steps-section" class="other-section">
+      <div class="column-container container">
+        <h2>Simple Steps to Start Volunteering</h2>
+        <p data-type="centered-txt">Get started within minutes. Follow our streamlined process to begin making an active impact today.</p>
+        
+        <!-- Cards Flex Grid Layout Matrix -->
+        <div class="card-container">
+          <!-- Step 1 Card -->
+          <div class="card">
+            <div class="step-number">1</div>
+            <i class="fa-solid fa-user-plus card-icon"></i>
+            <h3>Create Your Profile</h3>
+            <p>Sign up, list your unique skill sets, add personal interests, and display your operational hours availability.</p>
+          </div>
+
+          <!-- Step 2 Card -->
+          <div class="card">
+            <div class="step-number">2</div>
+            <i class="fa-solid fa-magnifying-glass-location card-icon"></i>
+            <h3>Discover Opportunities</h3>
+            <p>Filter through local non-profits or remote global projects needing help matching your background.</p>
+          </div>
+
+          <!-- Step 3 Card -->
+          <div class="card">
+            <div class="step-number">3</div>
+            <i class="fa-solid fa-heart-circle-check card-icon"></i>
+            <h3>Start Volunteering</h3>
+            <p>Connect securely with project managers, join your assigned community group, and log your meaningful hours.</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!--footer part-->
-  <footer>
+  
 
-  </footer>
+  <!-- SCRIPT FOR NAVIGATION BAR MANAGEMENT -->
+  <script>
+    // Elements Selector Controls
+    const hamburger = document.getElementById('hamburger');
+    const navlist = document.getElementById('navlist');
+    const navAuthContainer = document.getElementById('navAuthContainer');
+
+    // Drawer Toggler for Mobile Layouts
+    hamburger.addEventListener('click', () => {
+      navlist.classList.toggle('open');
+      hamburger.classList.toggle('toggle');
+    });
+
+    // Check Auth State: If true, swap the sign-in button for a mock profile element
+    function checkLoginState() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      const userType = localStorage.getItem('userType'); // 'volunteer' or 'ngo'
+
+      if (isLoggedIn === 'true') {
+        navAuthContainer.innerHTML = `
+          <div class="profile-badge">
+            <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="profile-dropdown">
+              <p class="user-role">${userType === 'ngo' ? 'NGO Dashboard' : 'My Account'}</p>
+              <a href="#" onclick="handleLogout(event)" class="logout-btn">Log Out</a>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Clear session storage and reload layout view
+    function handleLogout(e) {
+      e.preventDefault();
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userType');
+      window.location.reload();
+    }
+
+    // Run Auth checks upon document render cycle
+    document.addEventListener('DOMContentLoaded', checkLoginState);
+  </script>
 </body>
 </html>
