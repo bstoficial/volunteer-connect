@@ -15,7 +15,7 @@
   --white: #f7f9f8;
   --gray: #646966;
   --glow: #e2ffef;
-  --red: #eb4d4b; /* Added previously missing red token */
+  --red: #eb4d4b; 
   --transition: all 0.3s ease-in-out;
 }
 
@@ -106,7 +106,7 @@ header {
 }
 
 .fa-solid {
-  font-size: 1.1rem; /* Fixed formatting bug 'font: size' */
+  font-size: 1.1rem;
   color: var(--white);
 }
 
@@ -114,21 +114,27 @@ header {
 .hero-section {
   min-height: 88vh;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; /* Stacks items vertically if needed */
+  justify-content: center; /* Centers content vertically */
+  align-items: center;    /* Centers content horizontally */
+  text-align: center;     /* Centers inline text inside elements */
   gap: 2rem;
   padding-block: 2rem;
 }
 
+
 .content {
   flex: 1.2;
+  align-items: center;
 }
 
 .watch {
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
+  margin-top: 8rem;
 }
 
 .watch h3 {
@@ -139,7 +145,7 @@ header {
 
 h1 {
   font-size: clamp(2.5rem, 5vw, 4.5rem);
-  line-index: 1.1;
+  line-height: 1.1;
   line-height: clamp(2.8rem, 5.5vw, 4.8rem);
   color: var(--black);
   font-weight: 800;
@@ -192,7 +198,7 @@ img {
 
 button {
   cursor: pointer;
-  transition: var(--transition);
+ transform: translateY(-8%);
 }
 
 .btn-primary {
@@ -208,6 +214,10 @@ button {
 .btn-primary:hover {
   opacity: 0.9;
   box-shadow: 0 4px 15px rgba(43, 173, 105, 0.3);
+   transform: translateY(0.01%);
+   transition: opacity 0.25s ease, transform 0.25s ease;
+
+
 }
 
 [data-type='bordered-btn'] {
