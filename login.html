@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Sign Up Portal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .portal-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* Toggle Header Buttons matching your design */
+    .toggle-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .toggle-buttons button {
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-active {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+    }
+
+    .btn-inactive {
+      background-color: transparent;
+      color: #2c3e50;
+      border: 1px solid #7f8c8d;
+    }
+
+    /* Forms visibility handling */
+    .form-view {
+      display: none;
+    }
+
+    .form-view.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .submit-btn:hover {
+      background-color: #219653;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portal-container">
+    <div class="toggle-buttons">
+      <button id="loginTab" class="btn-active" onclick="switchTab('login')">Log In</button>
+      <button id="signupTab" class="btn-inactive" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <div id="loginFormView" class="form-view active">
+      <form onsubmit="executeLogin(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" required placeholder="name@domain.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="submit-btn">Log Into Account</button>
+      </form>
+    </div>
+
+    <div id="signupFormView" class="form-view">
+      <form onsubmit="executeLogin(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" required placeholder="Alex Smith">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" required placeholder="name@domain.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" required placeholder="Create password">
+        </div>
+        <button type="submit" class="submit-btn">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Toggles between the Login and Signup panel inside this portal
+    function switchTab(type) {
+      const loginTab = document.getElementById('loginTab');
+      const signupTab = document.getElementById('signupTab');
+      const loginForm = document.getElementById('loginFormView');
+      const signupForm = document.getElementById('signupFormView');
+
+      if (type === 'login') {
+        loginTab.className = 'btn-active';
+        signupTab.className = 'btn-inactive';
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+      } else {
+        loginTab.className = 'btn-inactive';
+        signupTab.className = 'btn-active';
+        loginForm.classList.remove('active');
+        signupForm.classList.add('active');
+      }
+    }
+
+    // Handles form submission
+    function executeLogin(event) {
+      event.preventDefault();
+      
+      // 1. Tell browser that the user is officially logged in 
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      // 2. Redirect back to your main application homepage file
+      window.location.href = 'index.html'; 
+    }
+  </script>
+</body>
+</html>

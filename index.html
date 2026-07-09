@@ -1,108 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
+
+
 <head>
+  <!-- Basic metadata  -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Volunteer Connect</title>
-  <!-- Google Fonts & Font Awesome Icons -->
+  <title>Volunteer Connect — Empowering Communities Together</title>
+  
+   <!-- Google Fonts & Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
+
+  <!-- REMIXICON/ cdnjs.com/libraries/remixicon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.css">
+
+<!-- CSS -->
+  <link rel="stylesheet" href="styles.css">
+
+
+
+  
 </head>
+
+  
+
+
+
+
+
 <body>
-  <!-- Header / Navigation -->
-  <header>
-    <nav class="navbar container">
-      <div class="logo">
-        <a href="#" class="logo-txt"><span>Volunteer</span>Connect.</a>
+  
+
+  <!-- =====        NAVIGATION BAR  =====        -->
+<nav id="mainNav" class="navbar">
+  <div class="navbar-container">
+
+    <!-- Logo section -->
+    <div class="navbar-logo">
+      <img src="images/volunteerconnect.png" alt="Volunteer Connect Logo" class="logo-img">
+    </div>
+    
+    <!-- Navigation links that users click to go to different pages -->
+    <div class="nav-links" id="navLinks">
+      <a href="#home" class="nav-link active" onclick="navigateTo('home')">Home</a>
+      <a href="#opportunities" class="nav-link" onclick="navigateTo('opportunities')">Opportunities</a>
+      <a href="#organizations" class="nav-link" onclick="navigateTo('organizations')">Organizations</a>
+      <a href="#contact" class="nav-link" onclick="navigateTo('contact')">Contact</a>
+      <!-- Added a Profile page link inside the main links; hidden by default until user logs in -->
+      <a href="#profile" id="navProfileLink" class="nav-link" onclick="navigateTo('profile')" style="display: none;">My Profile</a>
+    </div>
+    
+    <!-- Login/Profile button container -->
+    <div class="navbar-auth">
+  <a href="login.html" id="loginNavBtn" style="text-decoration: none;">
+    <button class="btn-primary">Log In</button>
+  </a>
+  <a href="login.html" id="signupNavBtn" style="text-decoration: none;">
+    <button data-type="bordered-btn">Sign Up</button>
+  </a>
+  
+  <div id="navProfileDropdown" class="profile-dropdown" style="display: none;">
+    <div class="profile-trigger" onclick="toggleDropdown(event)">
+      <img id="navAvatar" src="images/default-avatar.png" alt="Profile" class="nav-avatar">
+      <span id="navUsername">User Name</span>
+      <span class="arrow-down">▼</span>
+    </div>
+
+    <div id="dropdownMenu" class="dropdown-content">
+      <div class="dropdown-header">
+        <strong id="menuFullname">User Name</strong>
+        <p id="menuEmail">user@example.com</p>
       </div>
-      
-      <!-- Center Links Navigation -->
-      <ul class="navlist" id="navlist">
-        <li><a href="index.html" class="navlinks active">Home</a></li>
-        <li><a href="#steps-section" class="navlinks">How it Works</a></li>
-        <li><a href="portal.html" class="navlinks">Opportunities</a></li>
-        <li><a href="#" class="navlinks">Contact</a></li>
-      </ul>
-      
-      <div class="nav-icons" id="nav-icons">
-        <a href="portal.html" class="icons-link" title="Login Portal">
-          <i class="fa-solid fa-user"></i>
-        </a>
-        <a href="#" class="icons-link" title="Volunteer Now">
-          <i class="fa-solid fa-hand-holding-heart"></i>
-        </a>
+      <hr>
+      <a href="#edit-profile" onclick="openEditModal()">✏️ Edit Profile</a>
+      <a href="login.html" onclick="logout()">🔄 Switch Account</a>
+      <hr>
+      <a href="#logout" onclick="logout()" class="logout-link">🚪 Log Out</a>
+    </div>
+  </div>
+</div>
+
+<div id="editProfileModal" class="modal-overlay" style="display: none;">
+  <div class="modal-box">
+    <h3>Edit Profile Settings</h3>
+    <form onsubmit="saveProfileChanges(event)">
+      <div class="avatar-edit-section">
+        <img id="modalAvatarPreview" src="images/default-avatar.png" class="modal-avatar-preview">
+        <label for="avatarInput" class="avatar-upload-btn">Change Photo</label>
+        <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(event)" style="display: none;">
       </div>
 
-      <div class="hamburger" id="hamburger" aria-label="Toggle Menu">
-        <div class="burger"></div>
-        <div class="burger"></div>
-        <div class="burger"></div>
+      <div class="modal-field">
+        <label>Display Name</label>
+        <input type="text" id="editNameField" required placeholder="Your Name">
       </div>
-    </nav>
-  </header>
 
-  <!-- Main Content -->
-  <main>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+</nav>
+
+
+
+  
+  <!-- PAGE CONTAINER - All pages display here -->
+  <main id="pageContainer">
+    
+    <!-- ==================== HOME PAGE ==================== -->
+    <div id="page-home" class="page-content active">
+      
+
+
+
+
+
+      <!-- HERO SECTION -->
+      <!-- <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">Volunteer Connect</h1>
+          <p class="hero-subtitle">Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities that align with your skills and values.</p>
+          <button class="btn-primary btn-large" onclick="navigateTo('opportunities')">Browse Opportunities</button>
+        </div>
+      </section> -->
+
+
+
+
+
+
+
+
+
+
+
     <!-- Hero Section -->
     <section class="hero-section container">
       <div class="content">
         <div class="watch">
-          <a href="#" class="icons-link">
+          <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="icons-link" aria-label="Watch intro video">
             <i class="fa-solid fa-play"></i>
           </a>
           <h3>Volunteer Connect</h3>
         </div>
-        <h1><span>Connect.</span><br>Contribute.<br><span>Transform.</span></h1>
+        <h1><span>Connect.</span><br><span class="hero-highlight">Contribute.</span><br><span>Transform.</span></h1>
         <p>Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities that align with your skills and values.</p>
         <div class="btn-container">
           <button class="btn-primary">Find Opportunities</button>
           <button data-type="bordered-btn">Join as Volunteer </button>
-        
-
         </div>
       </div>
 
-     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
     </section>
 
-     <!-- HOW-TO-START STEPS SECTION -->
-    <section id="steps-section" class="other-section">
-      <div class="column-container container">
-        <h2>Simple Steps to Start Volunteering</h2>
-        <p data-type="centered-txt">Get started within minutes. Follow our streamlined process to begin making an active impact today.</p>
-        
-        <!-- Cards Flex Grid Layout Matrix -->
-        <div class="card-container">
-          <!-- Step 1 Card -->
-          <div class="card">
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works">
+        <div class="section-header">
+          <h2 class="section-title">How It Works</h2>
+        </div>
+        <div class="steps-grid">
+          <!-- Step 1 -->
+          <div class="step-card">
             <div class="step-number">1</div>
-            <i class="fa-solid fa-user-plus card-icon"></i>
-            <h3>Create Your Profile</h3>
-            <p>Sign up, list your unique skill sets, add personal interests, and display your operational hours availability.</p>
+            <h3>Create Account</h3>
+            <p>Sign up as a volunteer or organization in just 2 minutes</p>
           </div>
-
-          <!-- Step 2 Card -->
-          <div class="card">
+          <!-- Step 2 -->
+          <div class="step-card">
             <div class="step-number">2</div>
-            <i class="fa-solid fa-magnifying-glass-location card-icon"></i>
-            <h3>Discover Opportunities</h3>
-            <p>Filter through local non-profits or remote global projects needing help matching your background.</p>
+            <h3>Browse Opportunities</h3>
+            <p>Find volunteer work that matches your skills and interests</p>
           </div>
-
-          <!-- Step 3 Card -->
-          <div class="card">
+          <!-- Step 3 -->
+          <div class="step-card">
             <div class="step-number">3</div>
-            <i class="fa-solid fa-heart-circle-check card-icon"></i>
-            <h3>Start Volunteering</h3>
-            <p>Connect securely with project managers, join your assigned community group, and log your meaningful hours.</p>
+            <h3>Apply & Connect</h3>
+            <p>Apply to opportunities and get connected with organizations</p>
+          </div>
+          <!-- Step 4 -->
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>Make Impact</h3>
+            <p>Volunteer, help communities, and track your contribution</p>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
 
-  
+ 
+  <!-- ============================================================ -->
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <!-- ============================================================ -->
+  <!-- Toast messages appear here for success/error notifications -->
+  <div id="toastContainer" class="toast-container"></div>
 
-  
+  <!-- Link to our custom JavaScript file - handles all interactions -->
+  <script src="script.js"></script>
+
+  <!-- Include Chart.js for creating charts and graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 </body>
 </html>
