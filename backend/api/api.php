@@ -69,6 +69,19 @@ case 'logout':
     $_SESSION=[]; if(ini_get('session.use_cookies')){ $p=session_get_cookie_params(); setcookie(session_name(),' ',time()-42000,$p['path'],$p['domain'],$p['secure'],$p['httponly']); } session_destroy();
     jsonResponse(['success'=>true,'message'=>'Signed out successfully.']);
 
+case 'contact_submit':
+    $name=trim($data['name']??''); $email=trim($data['email']??''); $subject=trim($data['subject']??''); $message=trim($data['message']??'');
+    if($name===''||!filter_var($email,FILTER_VALIDATE_EMAIL)||$subject===''||$message==='')
+        jsonResponse(['success'=>false,'message'=>'Please complete all contact fields.'],400);
+    if(strlen($name)>120||strlen($subject)>255||strlen($message)>10000)
+        jsonResponse(['success'=>false,'message'=>'One or more fields are too long.'],400);
+    $stmt=$conn->prepare("INSERT INTO contact_messages(name,email,subject,message) VALUES(?,?,?,?)");
+    if(!$stmt) jsonResponse(['success'=>false,'message'=>'Could not save your message.'],500);
+    $stmt->bind_param('ssss',$name,$email,$subject,$message);
+    if(!$stmt->execute()){ $stmt->close(); jsonResponse(['success'=>false,'message'=>'Could not save your message.'],500); }
+    $stmt->close();
+    jsonResponse(['success'=>true,'message'=>'Thank you for reaching out! We will reply shortly.'],201);
+
 case 'opportunities':
     $where="o.status='active'"; $params=[]; $types='';
     if(!empty($_GET['search'])) { $where.=" AND (o.title LIKE ? OR o.description LIKE ? OR org.name LIKE ?)"; $q='%'.$_GET['search'].'%'; $params=[$q,$q,$q]; $types='sss'; }
@@ -255,6 +268,29 @@ case 'admin_opportunities':
         FROM opportunities o JOIN organizations org ON org.id=o.organization_id
         ORDER BY o.created_at DESC LIMIT 100");
     jsonResponse(['success'=>true,'opportunities'=>$r->fetch_all(MYSQLI_ASSOC)]);
+
+case 'admin_messages':
+    requireRole('admin');
+    if(!empty($_GET['mark_read'])) {
+        $conn->query("UPDATE contact_messages SET status='read' WHERE status='unread'");
+    }
+    $r=$conn->query("SELECT id,name,email,subject,message,status,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 200");
+    if(!$r) jsonResponse(['success'=>false,'message'=>'Could not load contact messages.'],500);
+    $messages=$r->fetch_all(MYSQLI_ASSOC);
+    $unread=0;
+    foreach($messages as $messageRow) if($messageRow['status']==='unread') $unread++;
+    jsonResponse(['success'=>true,'messages'=>$messages,'unread'=>$unread]);
+
+case 'admin_message_status':
+    requireRole('admin');
+    $id=(int)($data['id']??0); $status=$data['status']??'';
+    if(!$id || !in_array($status,['unread','read'],true))
+        jsonResponse(['success'=>false,'message'=>'Invalid message status.'],400);
+    $stmt=$conn->prepare("UPDATE contact_messages SET status=? WHERE id=?");
+    if(!$stmt) jsonResponse(['success'=>false,'message'=>'Could not update message status.'],500);
+    $stmt->bind_param('si',$status,$id); $stmt->execute(); $updated=$stmt->affected_rows; $stmt->close();
+    if($updated<0) jsonResponse(['success'=>false,'message'=>'Could not update message status.'],500);
+    jsonResponse(['success'=>true,'message'=>'Message marked as '.$status.'.']);
 
 case 'stats':
     requireLogin();

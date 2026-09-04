@@ -473,6 +473,8 @@ async function initAdminDashboard() {
     await loadAdminPendingOrgs();
     // Load opportunities
     await loadAdminOpportunities();
+    // Load contact messages
+    await loadAdminMessages();
 
     // Keep the admin view current when a registration is submitted elsewhere.
     if (!adminRefreshTimer) {
@@ -482,6 +484,7 @@ async function initAdminDashboard() {
                 loadAdminPendingOrgs();
                 loadAdminOrgs();
                 loadAdminOpportunities();
+                loadAdminMessages();
             }
         }, 10000);
     }
@@ -543,6 +546,13 @@ async function loadAdminOpportunities() {
     } catch { /* ignore */ }
 }
 
+async function loadAdminMessages(markAsRead = false) {
+    try {
+        const data = await apiFetch('admin_messages', markAsRead ? { mark_read: '1' } : {});
+        if (data.success) renderAdminMessagesTable(data.messages || [], data.unread || 0);
+    } catch { renderAdminMessagesTable([], 0); }
+}
+
 function switchAdminTab(tabName, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -554,6 +564,40 @@ function switchAdminTab(tabName, btn) {
     if (tabName === 'orgs') loadAdminOrgs();
     if (tabName === 'users') loadAdminUsers();
     if (tabName === 'opps') loadAdminOpportunities();
+    if (tabName === 'messages') loadAdminMessages(true);
+}
+
+function renderAdminMessagesTable(messages, unread) {
+    const tbody = document.getElementById('adminMessagesTableBody');
+    if (!tbody) return;
+    const badge = document.getElementById('adminMessagesBadge');
+    if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? 'inline-flex' : 'none'; }
+    if (!messages.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No contact messages yet.</td></tr>';
+        return;
+    }
+        tbody.innerHTML = messages.map(m => `<tr class="${m.status === 'unread' ? 'font-semibold' : ''}">
+      <td><strong>${escHtml(m.name)}</strong><div class="text-xs text-muted">${escHtml(m.email)}</div></td>
+      <td>${escHtml(m.subject)}</td>
+      <td class="text-sm" style="max-width:420px;white-space:normal;">${escHtml(m.message)}</td>
+      <td>${fmtDate(m.created_at)}</td>
+            <td>
+                <span class="badge ${m.status === 'unread' ? 'badge-warning' : 'badge-success'}">${m.status}</span>
+                <button type="button" class="btn btn-sm btn-outline" style="margin-left:6px;padding:3px 8px;font-size:11px;" onclick="updateAdminMessageStatus(${m.id},'${m.status === 'unread' ? 'read' : 'unread'}')">
+                    Mark ${m.status === 'unread' ? 'read' : 'unread'}
+                </button>
+            </td>
+    </tr>`).join('');
+}
+
+async function updateAdminMessageStatus(id, status) {
+        try {
+                const data = await apiFetch('admin_message_status', {}, 'POST', { id, status });
+                if (!data.success) throw new Error(data.message || 'Could not update message.');
+                await loadAdminMessages();
+        } catch (error) {
+                toast(error.message || 'Could not update message.', 'error');
+        }
 }
 
 function filterAdminUsers() {
@@ -759,10 +803,22 @@ async function handleProfileSave(e) {
 }
 
 // ── Contact Form ──────────────────────────────────────────────
-function handleContactForm(e) {
+async function handleContactForm(e) {
     e.preventDefault();
-    toast('Thank you for reaching out! We will reply shortly.', 'success');
-    e.target.reset();
+    const form=e.target; const button=form.querySelector('button[type="submit"]');
+    const original=button?.innerHTML;
+    if(button){ button.disabled=true; button.innerHTML='Sending...'; }
+    try {
+        const data=await apiFetch('contact_submit',{},'POST',{
+            name:document.getElementById('contactName')?.value.trim()||'',
+            email:document.getElementById('contactEmail')?.value.trim()||'',
+            subject:document.getElementById('contactSubject')?.value.trim()||'',
+            message:document.getElementById('contactMessage')?.value.trim()||''
+        });
+        if(data.success){ toast(data.message,'success'); form.reset(); }
+        else toast(data.message||'Could not send your message.','error');
+    } catch { toast('Network error. Please try again.','error'); }
+    finally { if(button){ button.disabled=false; button.innerHTML=original; } }
 }
 
 // ── Animated Counters ─────────────────────────────────────────

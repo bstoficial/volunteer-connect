@@ -143,6 +143,21 @@ CREATE TABLE IF NOT EXISTS `activity_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
+-- Table: contact_messages
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `contact_messages` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(120) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `subject` VARCHAR(255) NOT NULL,
+    `message` TEXT NOT NULL,
+    `status` ENUM('unread','read') NOT NULL DEFAULT 'unread',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_contact_messages_status` (`status`),
+    INDEX `idx_contact_messages_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 -- Table: user_sessions
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `user_sessions` (

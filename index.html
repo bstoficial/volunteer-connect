@@ -315,7 +315,7 @@
               <i class="fas fa-quote-left quote-icon text-forest-200"></i>
               <div class="flex-row items-center gap-3 mb-4">
                 <img
-                  src="https://instagram.fktm24-1.fna.fbcdn.net/v/t51.82787-19/639860790_18090939971153596_6415402098418386817_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=106&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=Cq9DQ1qxEZQQ7kNvwE7oiUy&_nc_oc=AdqKSw5ojPLkZbJCio3ZOvxBEV0Z6FhMmo1YF4rajfS8D8BXjFHNa-IK6KWoiohemmA&_nc_zt=24&_nc_ht=instagram.fktm24-1.fna&_nc_gid=0HYWv1OK3Ahh0ZkVwRSHSw&_nc_ss=7baaf&oh=00_AQGaLp7m1HNOIilTdkbqdymN5gozhJ24tHhldi5FxLiJqQ&oe=6A83767A"
+                  src="images/bibesh1.jpg"
                   class="avatar-img" alt="Bibesh">
                 <div>
                   <div class="font-bold">Bibesh Shahi Thakuri</div>
@@ -334,15 +334,14 @@
               <i class="fas fa-quote-left quote-icon text-amber-200"></i>
               <div class="flex-row items-center gap-3 mb-4">
                 <img
-                  src="https://instagram.fktm24-1.fna.fbcdn.net/v/t51.82787-19/758426909_18022016420885089_4385843623942009378_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=107&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy43MDAuQzMifQ%3D%3D&_nc_ohc=9PnU_1QfVuwQ7kNvwGeZWYR&_nc_oc=Adqg5yeHPpNIPAYOsCmj1drMaTw_pD50UnWw6FQGuGW9FynTt4c0L_oW1wkrxreLdcY&_nc_zt=24&_nc_ht=instagram.fktm24-1.fna&_nc_gid=iD7CoG5sQkfRtK_WK-ftug&_nc_ss=7baaf&oh=00_AQGTk6FKLDLslw9Lv3H411Pr-j084fi4c8w8YsHUFQlSgw&oe=6A838F8C"
-                  class="avatar-img" alt="Sunil">
+                src="images/sunil.jpg"
+                class="avatar-img" alt="Sunil">
                 <div>
                   <div class="font-bold">Sunil Thapa</div>
-                  <div class="text-sm text-muted">NGO Representative</div>
+                  <div class="text-sm text-muted">Volunteer</div>
                 </div>
               </div>
-              <p class="text-muted leading-relaxed">"As an organization, we've onboarded over 200 volunteers through
-                this platform. The application tracking and management tools save us countless hours every week."</p>
+              <p class="text-muted leading-relaxed">"The interface makes it incredibly simple to create community events, assign shifts, and track performance goals effortlessly."</p>
               <div class="star-rating mt-4">
                 <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                   class="fas fa-star"></i><i class="fas fa-star"></i>
@@ -535,22 +534,22 @@
       </div>
       <div class="grid grid-4 gap-6">
         <div class="card-hover team-card">
-          <img src="images/bibesh1.jpg" class="team-avatar" alt="Team member">
-          <h4 class="font-bold">Bibesh Shahi Thakuri</h4>
-          <p class="text-sm text-muted">Backend Developer</p>
-        </div>
-        <div class="card-hover team-card">
           <img src="images/sujan.jpg" class="team-avatar" alt="Team member">
           <h4 class="font-bold">Sujan Timalsina</h4>
-          <p class="text-sm text-muted">Frontend Developer</p>
+          <p class="text-sm text-muted">Developer</p>
         </div>
         <div class="card-hover team-card">
-          <img src="images/defult.jpg" class="team-avatar" alt="Team member">
-          <h4 class="font-bold">Team Member</h4>
+          <img src="images/bibesh1.jpg" class="team-avatar" alt="Team member">
+          <h4 class="font-bold">Bibesh Shahi Thakuri</h4>
+          <p class="text-sm text-muted">Developer</p>
+        </div>
+        <div class="card-hover team-card">
+          <img src="images/admin.gif" class="team-avatar" alt="Team member">
+          <h4 class="font-bold">Admin</h4>
           <p class="text-sm text-muted">Admin</p>
         </div>
         <div class="card-hover team-card">
-          <img src="images/defult.jpg" class="team-avatar" alt="Team member">
+          <img src="images/admin.gif" class="team-avatar" alt="Team member">
           <h4 class="font-bold">Team Member</h4>
           <p class="text-sm text-muted">Community Manager</p>
         </div>
@@ -849,6 +848,10 @@
             <button class="tab-btn" onclick="switchAdminTab('users',this)">Volunteers</button>
             <button class="tab-btn" onclick="switchAdminTab('orgs',this)">All Organizations</button>
             <button class="tab-btn" onclick="switchAdminTab('opps',this)">Opportunities</button>
+            <button class="tab-btn" onclick="switchAdminTab('messages',this)" style="position:relative;">
+              Messages
+              <span id="adminMessagesBadge" style="display:none;position:absolute;top:6px;right:6px;background:#ef4444;color:#fff;border-radius:9999px;font-size:11px;min-width:18px;height:18px;padding:0 4px;align-items:center;justify-content:center;font-weight:700;">0</span>
+            </button>
           </div>
 
           <!-- Pending Organization Requests Tab -->
@@ -958,6 +961,27 @@
               </table>
             </div>
           </div>
+
+          <!-- Contact Messages Tab -->
+          <div class="admin-tab-content hidden" id="admin-tab-messages">
+            <div class="table-header">
+              <div>
+                <span class="text-sm text-muted">Messages sent through the contact form</span>
+                <p class="text-xs text-muted mt-1">Review questions, suggestions, and partnership requests from visitors.</p>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="loadAdminMessages()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th><th>Status</th></tr>
+                </thead>
+                <tbody id="adminMessagesTableBody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1017,7 +1041,7 @@
   <!-- ============ FOOTER ============ -->
   <footer class="footer" id="mainFooter">
     <div class="max-w-7xl container">
-      <div class="grid grid-4 gap-10 mb-12">
+      <div class="footer-grid mb-8">
         <div>
           <div class="logo mb-4">
             <div class="logo-icon bg-gradient-forest">
@@ -1031,19 +1055,18 @@
         <div>
           <h4 class="font-bold mb-4 text-white">Platform</h4>
           <ul class="footer-links">
-            <li><a onclick="navigateTo('opportunities')">Find Opportunities</a></li>
-            <li><a onclick="showModal('register')">Become a Volunteer</a></li>
-            <li><a onclick="showModal('register')">Register Organization</a></li>
-            <li><a onclick="navigateTo('about')">About Us</a></li>
+            <li><button type="button" class="footer-link" onclick="navigateTo('opportunities')">Find Opportunities</button></li>
+            <li><button type="button" class="footer-link" onclick="showModal('register')">Become a Volunteer</button></li>
+            <li><button type="button" class="footer-link" onclick="showModal('register')">Register Organization</button></li>
           </ul>
         </div>
         <div>
-          <h4 class="font-bold mb-4 text-white">Resources</h4>
+          <h4 class="font-bold mb-4 text-white">Explore</h4>
           <ul class="footer-links">
-            <li><a>Help Center</a></li>
-            <li><a>Safety Guidelines</a></li>
-            <li><a>Volunteer Handbook</a></li>
-            <li><a>Blog</a></li>
+            <li><button type="button" class="footer-link" onclick="navigateTo('home')">Home</button></li>
+            <li><button type="button" class="footer-link" onclick="navigateTo('about')">About Us</button></li>
+            <li><button type="button" class="footer-link" onclick="navigateTo('contact')">Contact Us</button></li>
+            <li><button type="button" class="footer-link" onclick="showModal('login')">Sign In</button></li>
           </ul>
         </div>
         <div>
@@ -1057,12 +1080,9 @@
       </div>
       <div class="footer-bottom">
         <p class="text-sm text-forest-400">&copy; 2026 VolunteerConnect. All rights reserved.</p>
-        <div class="social-icons">
-          <a class="social-btn"><i class="fab fa-twitter"></i></a>
-          <a class="social-btn"><i class="fab fa-facebook-f"></i></a>
-          <a class="social-btn"><i class="fab fa-linkedin-in"></i></a>
-          <a class="social-btn"><i class="fab fa-instagram"></i></a>
-        </div>
+        <button type="button" class="footer-home-link" onclick="navigateTo('home')">
+          Back to top <i class="fas fa-arrow-up" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
   </footer>
