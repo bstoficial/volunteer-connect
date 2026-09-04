@@ -30,7 +30,7 @@
   <nav class="navbar glass fixed-top" id="mainNav">
     <div class="nav-container max-w-7xl">
       <!-- Logo -->
-      <div class="logo cursor-pointer" onclick="navigateTo('home')">
+      <div class="logo cursor-pointer" onclick="navigateTo(isAuthenticated() ? dashboardRoute() : 'home')">
         <div class="logo-icon">
           <i class="fas fa-hands-helping"></i>
         </div>
@@ -39,10 +39,10 @@
 
       <!-- Desktop Nav Links -->
       <div class="desktop-nav">
-        <span class="nav-link active" data-nav="home" onclick="navigateTo('home')">Home</span>
-        <span class="nav-link" data-nav="opportunities" onclick="navigateTo('opportunities')">Opportunities</span>
-        <span class="nav-link" data-nav="about" onclick="navigateTo('about')">About</span>
-        <span class="nav-link" data-nav="contact" onclick="navigateTo('contact')">Contact</span>
+        <span class="nav-link public-nav-link active" data-nav="home" onclick="navigateTo('home')">Home</span>
+        <span class="nav-link public-nav-link" data-nav="opportunities" onclick="navigateTo('opportunities')">Opportunities</span>
+        <span class="nav-link public-nav-link" data-nav="about" onclick="navigateTo('about')">About</span>
+        <span class="nav-link public-nav-link" data-nav="contact" onclick="navigateTo('contact')">Contact</span>
       </div>
 
       <!-- Auth Buttons & User Menu -->
@@ -84,10 +84,10 @@
     <!-- Mobile Navigation Drawer -->
     <div class="mobile-menu hidden" id="mobileMenu">
       <div class="mobile-menu-inner">
-        <a class="mobile-link" onclick="navigateTo('home');toggleMobileMenu()">Home</a>
-        <a class="mobile-link" onclick="navigateTo('opportunities');toggleMobileMenu()">Opportunities</a>
-        <a class="mobile-link" onclick="navigateTo('about');toggleMobileMenu()">About</a>
-        <a class="mobile-link" onclick="navigateTo('contact');toggleMobileMenu()">Contact</a>
+        <a class="mobile-link public-nav-link" onclick="navigateTo('home');toggleMobileMenu()">Home</a>
+        <a class="mobile-link public-nav-link" onclick="navigateTo('opportunities');toggleMobileMenu()">Opportunities</a>
+        <a class="mobile-link public-nav-link" onclick="navigateTo('about');toggleMobileMenu()">About</a>
+        <a class="mobile-link public-nav-link" onclick="navigateTo('contact');toggleMobileMenu()">Contact</a>
         <div class="mobile-auth-wrapper" id="mobileAuthBtns">
           <button class="btn btn-outline btn-sm flex-1" onclick="showModal('login');toggleMobileMenu()">Sign In</button>
           <button class="btn btn-primary btn-sm flex-1" onclick="showModal('register');toggleMobileMenu()">Get

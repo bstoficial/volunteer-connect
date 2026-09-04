@@ -151,6 +151,7 @@ function updateAuthUI() {
     const userMenu   = document.getElementById('userMenu');
     const mobileAuth = document.getElementById('mobileAuthBtns');
     const mobileUser = document.getElementById('mobileUserBtns');
+    const publicNavLinks = document.querySelectorAll('.public-nav-link');
 
     const user = getCurrentUserData() || (typeof currentUser !== 'undefined' ? currentUser : null);
 
@@ -158,6 +159,7 @@ function updateAuthUI() {
     if (typeof currentUser !== 'undefined') currentUser = user;
 
     if (user) {
+        publicNavLinks.forEach(link => link.classList.add('hidden'));
         authBtns?.classList.add('hidden');
         userMenu?.classList.remove('hidden');
         userMenu?.classList.add('flex-row');
@@ -182,6 +184,7 @@ function updateAuthUI() {
             if (dRole) dRole.textContent = roleMap[user.role] || 'Member';
         }
     } else {
+        publicNavLinks.forEach(link => link.classList.remove('hidden'));
         authBtns?.classList.remove('hidden');
         userMenu?.classList.add('hidden');
         userMenu?.classList.remove('flex-row');
@@ -205,6 +208,8 @@ async function initSession() {
                 localStorage.removeItem('vc_user');
                 if (typeof currentUser !== 'undefined') currentUser = null;
                 updateAuthUI();
+            } else if (typeof navigateTo === 'function') {
+                navigateTo(dashboardRoute());
             }
         } catch { /* server unreachable — keep local state */ }
     } else {
