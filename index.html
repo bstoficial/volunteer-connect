@@ -1,261 +1,1204 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
-  <!-- Basic metadata  -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Volunteer Connect — Empowering Communities Together</title>
-  
-   <!-- Google Fonts & Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-  <!-- REMIXICON/ cdnjs.com/libraries/remixicon -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.css">
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@200;400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<!-- CSS -->
-  <link rel="stylesheet" href="styles.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
 
-
-
-  
+  <!-- JS Scripts -->
+  <script src="js/script.js" defer></script>
+  <script src="js/auth.js" defer></script>
 </head>
 
-  
-
-
-
-
-
 <body>
-  
 
-  <!-- =====        NAVIGATION BAR  =====        -->
-<nav id="mainNav" class="navbar">
-  <div class="navbar-container">
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Logo section -->
-    <div class="navbar-logo">
-      <img src="images/volunteerconnect.png" alt="Volunteer Connect Logo" class="logo-img">
-    </div>
-    
-    <!-- Navigation links that users click to go to different pages -->
-    <div class="nav-links" id="navLinks">
-      <a href="#home" class="nav-link active" onclick="navigateTo('home')">Home</a>
-      <a href="#opportunities" class="nav-link" onclick="navigateTo('opportunities')">Opportunities</a>
-      <a href="#organizations" class="nav-link" onclick="navigateTo('organizations')">Organizations</a>
-      <a href="#contact" class="nav-link" onclick="navigateTo('contact')">Contact</a>
-      <!-- Added a Profile page link inside the main links; hidden by default until user logs in -->
-      <a href="#profile" id="navProfileLink" class="nav-link" onclick="navigateTo('profile')" style="display: none;">My Profile</a>
-    </div>
-    
-    <!-- Login/Profile button container -->
-    <div class="navbar-auth">
-  <a href="login.html" id="loginNavBtn" style="text-decoration: none;">
-    <button class="btn-primary">Log In</button>
-  </a>
-  <a href="login.html" id="signupNavBtn" style="text-decoration: none;">
-    <button data-type="bordered-btn">Sign Up</button>
-  </a>
-  
-  <div id="navProfileDropdown" class="profile-dropdown" style="display: none;">
-    <div class="profile-trigger" onclick="toggleDropdown(event)">
-      <img id="navAvatar" src="images/default-avatar.png" alt="Profile" class="nav-avatar">
-      <span id="navUsername">User Name</span>
-      <span class="arrow-down">▼</span>
-    </div>
-
-    <div id="dropdownMenu" class="dropdown-content">
-      <div class="dropdown-header">
-        <strong id="menuFullname">User Name</strong>
-        <p id="menuEmail">user@example.com</p>
-      </div>
-      <hr>
-      <a href="#edit-profile" onclick="openEditModal()">✏️ Edit Profile</a>
-      <a href="login.html" onclick="logout()">🔄 Switch Account</a>
-      <hr>
-      <a href="#logout" onclick="logout()" class="logout-link">🚪 Log Out</a>
-    </div>
-  </div>
-</div>
-
-<div id="editProfileModal" class="modal-overlay" style="display: none;">
-  <div class="modal-box">
-    <h3>Edit Profile Settings</h3>
-    <form onsubmit="saveProfileChanges(event)">
-      <div class="avatar-edit-section">
-        <img id="modalAvatarPreview" src="images/default-avatar.png" class="modal-avatar-preview">
-        <label for="avatarInput" class="avatar-upload-btn">Change Photo</label>
-        <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(event)" style="display: none;">
-      </div>
-
-      <div class="modal-field">
-        <label>Display Name</label>
-        <input type="text" id="editNameField" required placeholder="Your Name">
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-        <button type="submit" class="btn-save">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
-</nav>
-
-
-
-  
-  <!-- PAGE CONTAINER - All pages display here -->
-  <main id="pageContainer">
-    
-    <!-- ==================== HOME PAGE ==================== -->
-    <div id="page-home" class="page-content active">
-      
-
-
-
-
-
-      <!-- HERO SECTION -->
-      <!-- <section class="hero">
-        <div class="hero-content">
-          <h1 class="hero-title">Volunteer Connect</h1>
-          <p class="hero-subtitle">Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities that align with your skills and values.</p>
-          <button class="btn-primary btn-large" onclick="navigateTo('opportunities')">Browse Opportunities</button>
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="navbar glass fixed-top" id="mainNav">
+    <div class="nav-container max-w-7xl">
+      <!-- Logo -->
+      <div class="logo cursor-pointer" onclick="navigateTo('home')">
+        <div class="logo-icon">
+          <i class="fas fa-hands-helping"></i>
         </div>
-      </section> -->
+        <span class="logo-text">Volunteer<span class="text-accent">Connect</span></span>
+      </div>
 
+      <!-- Desktop Nav Links -->
+      <div class="desktop-nav">
+        <span class="nav-link active" data-nav="home" onclick="navigateTo('home')">Home</span>
+        <span class="nav-link" data-nav="opportunities" onclick="navigateTo('opportunities')">Opportunities</span>
+        <span class="nav-link" data-nav="about" onclick="navigateTo('about')">About</span>
+        <span class="nav-link" data-nav="contact" onclick="navigateTo('contact')">Contact</span>
+      </div>
 
-
-
-
-
-
-
-
-
-
-    <!-- Hero Section -->
-    <section class="hero-section container">
-      <div class="content">
-        <div class="watch">
-          <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="icons-link" aria-label="Watch intro video">
-            <i class="fa-solid fa-play"></i>
-          </a>
-          <h3>Volunteer Connect</h3>
+      <!-- Auth Buttons & User Menu -->
+      <div class="nav-auth">
+        <div class="desktop-nav flex-row items-center gap-3">
+          <div id="authButtons" class="flex-row items-center gap-3">
+            <button class="btn btn-outline btn-sm" onclick="showModal('login')">Sign In</button>
+            <button class="btn btn-primary btn-sm" onclick="showModal('register')">Get Started</button>
+          </div>
+          <div id="userMenu" class="hidden flex-row items-center gap-3">
+            <span class="nav-link" onclick="navigateTo(dashboardRoute())" id="dashboardLink">
+              <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+            </span>
+            <div class="dropdown-wrapper">
+              <button class="user-avatar-btn" onclick="toggleUserDropdown()" id="userAvatarBtn">
+                <div class="avatar-circle" id="avatarInitial">V</div>
+                <span class="user-name-text" id="userName">User</span>
+                <i class="fas fa-chevron-down icon-xs"></i>
+              </button>
+              <div class="dropdown-menu hidden" id="userDropdown">
+                <a class="dropdown-item" onclick="navigateTo('profile')"><i
+                    class="fas fa-user icon-forest"></i>Profile</a>
+                <a class="dropdown-item" onclick="navigateTo(dashboardRoute())"><i
+                    class="fas fa-tachometer-alt icon-forest"></i>Dashboard</a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i>Sign Out</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <h1><span>Connect.</span><br><span class="hero-highlight">Contribute.</span><br><span>Transform.</span></h1>
-        <p>Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities that align with your skills and values.</p>
-        <div class="btn-container">
-          <button class="btn-primary">Find Opportunities</button>
-          <button data-type="bordered-btn">Join as Volunteer </button>
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+          <i class="fas fa-bars" id="mobileMenuIcon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="mobile-menu hidden" id="mobileMenu">
+      <div class="mobile-menu-inner">
+        <a class="mobile-link" onclick="navigateTo('home');toggleMobileMenu()">Home</a>
+        <a class="mobile-link" onclick="navigateTo('opportunities');toggleMobileMenu()">Opportunities</a>
+        <a class="mobile-link" onclick="navigateTo('about');toggleMobileMenu()">About</a>
+        <a class="mobile-link" onclick="navigateTo('contact');toggleMobileMenu()">Contact</a>
+        <div class="mobile-auth-wrapper" id="mobileAuthBtns">
+          <button class="btn btn-outline btn-sm flex-1" onclick="showModal('login');toggleMobileMenu()">Sign In</button>
+          <button class="btn btn-primary btn-sm flex-1" onclick="showModal('register');toggleMobileMenu()">Get
+            Started</button>
+        </div>
+        <div class="mobile-user-wrapper hidden" id="mobileUserBtns">
+          <a class="mobile-link" onclick="navigateTo(dashboardRoute());toggleMobileMenu()"><i
+              class="fas fa-tachometer-alt mr-2"></i>Dashboard</a>
+          <a class="mobile-link" onclick="navigateTo('profile');toggleMobileMenu()"><i
+              class="fas fa-user mr-2"></i>Profile</a>
+          <a class="mobile-link danger" onclick="logout();toggleMobileMenu()"><i
+              class="fas fa-sign-out-alt mr-2"></i>Sign Out</a>
         </div>
       </div>
+    </div>
+  </nav>
 
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="main-content">
 
+    <!-- ======== HOME PAGE ======== -->
+    <section class="page-section active" id="page-home">
+      <!-- Hero Section -->
+      <div class="hero-pattern hero-section">
+        <div class="leaf-deco top-left"></div>
+        <div class="leaf-deco bottom-right"></div>
 
+        <div class="max-w-7xl container py-20 relative z-10">
+          <div class="grid grid-2-lg gap-12 items-center">
+            <div>
+              <div class="animate-fadeUp stagger-1">
+                <span class="tag-pill">
+                  <span class="dot-indicator"></span>
+                  Volunteer Connect is Live!
+                </span>
+              </div>
+              <h1 class="font-display hero-title animate-fadeUp stagger-2">
+                Connect.<br>
+                <span class="gradient-text">Contribute.</span><br>
+                Transform.
+              </h1>
+              <p class="hero-subtitle animate-fadeUp stagger-3">
+                Bridge the gap between passionate volunteers and impactful organizations. Find meaningful opportunities
+                that align with your skills and values.
+              </p>
+              <div class="flex-row flex-wrap gap-4 mb-10 animate-fadeUp stagger-4">
+                <button class="btn btn-primary btn-lg" onclick="navigateTo('opportunities')">
+                  Find Opportunities <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                <button class="btn btn-outline btn-lg" onclick="showModal('register')">
+                  Join as Volunteer
+                </button>
+              </div>
+              <div class="flex-row items-center gap-8 animate-fadeUp stagger-5">
+                <div>
+                  <div class="stat-number" data-count="150">0</div>
+                  <div class="stat-label">Active Volunteers</div>
+                </div>
+                <div class="v-divider"></div>
+                <div>
+                  <div class="stat-number" data-count="50">0</div>
+                  <div class="stat-label">Organizations</div>
+                </div>
+                <div class="v-divider"></div>
+                <div>
+                  <div class="stat-number text-accent" data-count="100">0</div>
+                  <div class="stat-label">Lives Impacted</div>
+                </div>
+              </div>
+            </div>
 
+            <!-- Hero Graphic/Card -->
+            <div class="hero-visual">
+              <div class="bg-white card-box hero-card animate-float">
+                <div class="flex-row items-center gap-3 mb-6">
+                  <div class="icon-avatar">
+                    <i class="fas fa-seedling text-white"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-forest-800">Community Garden Project</h3>
+                    <p class="text-muted text-sm">Green Earth Foundation</p>
+                  </div>
+                </div>
+                <div class="flex-row flex-wrap gap-2 mb-4">
+                  <span class="badge badge-success"><i class="fas fa-map-marker-alt mr-1"></i>Kathmandu</span>
+                  <span class="badge badge-warning"><i class="fas fa-clock mr-1"></i>Weekends</span>
+                  <span class="badge badge-info"><i class="fas fa-users mr-1"></i>7 spots</span>
+                </div>
+                <div class="progress-bar mb-3">
+                  <div class="progress-bar-fill" style="width:70%"></div>
+                </div>
+                <div class="flex-row items-center justify-between text-sm">
+                  <span class="text-muted">70% filled</span>
+                  <span class="font-semibold text-primary">3 spots left</span>
+                </div>
+              </div>
 
+              <!-- Floating Badges -->
+              <div class="floating-badge badge-top-right">
+                <div class="flex-row items-center gap-3">
+                  <div class="circle-icon bg-amber-light">
+                    <i class="fas fa-star text-accent"></i>
+                  </div>
+                  <div>
+                    <div class="text-sm font-bold">4.9 Rating</div>
+                    <div class="text-xs text-muted">Top Rated</div>
+                  </div>
+                </div>
+              </div>
 
+              <!-- <div class="floating-badge badge-bottom-left">
+                <div class="flex-row items-center gap-3">
+                  <div class="avatar-stack"> -->
+              <!-- <div class="stack-avatar bg-forest-200">A</div>
+                    <div class="stack-avatar bg-amber-200">M</div>
+                    <div class="stack-avatar bg-blue-200">S</div> -->
+            </div>
+            <!-- <div class="text-xs text-muted"><span class="font-bold text-primary">+24</span> applied today</div> -->
+          </div>
+        </div>
+      </div>
+      </div>
+      </div>
+      </div>
 
+      <!-- How It Works Section -->
+      <div class="py-24 bg-white">
+        <div class="max-w-7xl container">
+          <div class="text-center mb-16">
+            <span class="text-primary font-semibold text-sm uppercase tracking-wider">How It Works</span>
+            <h2 class="font-display text-4xl font-black mt-3 mb-4">Simple Steps to <span class="gradient-text">Make
+                Impact</span></h2>
+            <p class="text-muted max-w-2xl mx-auto">Whether you're a volunteer looking to give back or an organization
+              seeking dedicated helpers, we've streamlined the process.</p>
+          </div>
+          <div class="grid grid-3 gap-8">
+            <div class="card-hover feature-card bg-forest-light">
+              <div class="step-icon-box bg-gradient-forest">
+                <i class="fas fa-user-plus text-white"></i>
+              </div>
+              <div class="step-number text-forest-100">01</div>
+              <h3 class="text-xl font-bold mb-3">Create Your Profile</h3>
+              <p class="text-muted text-sm">Sign up and tell us about your skills, interests, and availability. We'll
+                match you with perfect opportunities.</p>
+            </div>
+            <div class="card-hover feature-card bg-amber-light">
+              <div class="step-icon-box bg-gradient-amber">
+                <i class="fas fa-search text-white"></i>
+              </div>
+              <div class="step-number text-amber-100">02</div>
+              <h3 class="text-xl font-bold mb-3">Discover Opportunities</h3>
+              <p class="text-muted text-sm">Browse through hundreds of volunteer positions filtered by category,
+                location, and time commitment.</p>
+            </div>
+            <div class="card-hover feature-card bg-forest-light">
+              <div class="step-icon-box bg-gradient-forest">
+                <i class="fas fa-handshake text-white"></i>
+              </div>
+              <div class="step-number text-forest-100">03</div>
+              <h3 class="text-xl font-bold mb-3">Start Volunteering</h3>
+              <p class="text-muted text-sm">Apply with one click, get approved, and start making a real difference in
+                your community today.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Featured Opportunities Section -->
+      <div class="py-24" id="featured-ops">
+        <div class="max-w-7xl container">
+          <div class="flex-row items-center justify-between mb-12 flex-wrap gap-4">
+            <div>
+              <span class="text-primary font-semibold text-sm uppercase tracking-wider">Featured</span>
+              <h2 class="font-display text-4xl font-black mt-2">Urgent Opportunities</h2>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="navigateTo('opportunities')">View All <i
+                class="fas fa-arrow-right ml-1"></i></button>
+          </div>
+          <div class="grid grid-3 gap-6" id="featuredOpsGrid"></div>
+        </div>
+      </div>
 
+      <!-- Impact Stats Banner -->
+      <div class="py-20 banner-dark relative overflow-hidden">
+        <div class="max-w-7xl container relative z-10">
+          <div class="text-center mb-12">
+            <h2 class="font-display text-4xl font-black text-white">Our Collective <span
+                class="text-accent">Impact</span></h2>
+            <p class="text-forest-200 mt-3">Numbers that reflect real change in real communities</p>
+          </div>
+          <div class="grid grid-4 gap-6">
+            <div class="stat-box-dark">
+              <i class="fas fa-hands-helping text-accent icon-lg mb-3"></i>
+              <div class="text-4xl font-black text-white" data-count="150">0</div>
+              <div class="text-forest-300 text-sm mt-1">Active Volunteers</div>
+            </div>
+            <div class="stat-box-dark">
+              <i class="fas fa-building text-accent icon-lg mb-3"></i>
+              <div class="text-4xl font-black text-white" data-count="50">0</div>
+              <div class="text-forest-300 text-sm mt-1">Partner Orgs</div>
+            </div>
+            <div class="stat-box-dark">
+              <i class="fas fa-project-diagram text-accent icon-lg mb-3"></i>
+              <div class="text-4xl font-black text-white" data-count="100">0</div>
+              <div class="text-forest-300 text-sm mt-1">Projects Completed</div>
+            </div>
+            <div class="stat-box-dark">
+              <i class="fas fa-heart text-accent icon-lg mb-3"></i>
+              <div class="text-4xl font-black text-white" data-count="2000">0</div>
+              <div class="text-forest-300 text-sm mt-1">Hours Donated</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Testimonials -->
+      <div class="py-24 bg-white">
+        <div class="max-w-7xl container">
+          <div class="text-center mb-16">
+            <span class="text-primary font-semibold text-sm uppercase tracking-wider">Testimonials</span>
+            <h2 class="font-display text-4xl font-black mt-3">Voices of <span class="gradient-text">Impact</span></h2>
+          </div>
+          <div class="grid grid-3 gap-8">
+            <div class="card-hover testimonial-card bg-forest-light">
+              <i class="fas fa-quote-left quote-icon text-forest-200"></i>
+              <div class="flex-row items-center gap-3 mb-4">
+                <img
+                  src="https://instagram.fktm24-1.fna.fbcdn.net/v/t51.82787-19/639860790_18090939971153596_6415402098418386817_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=106&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=Cq9DQ1qxEZQQ7kNvwE7oiUy&_nc_oc=AdqKSw5ojPLkZbJCio3ZOvxBEV0Z6FhMmo1YF4rajfS8D8BXjFHNa-IK6KWoiohemmA&_nc_zt=24&_nc_ht=instagram.fktm24-1.fna&_nc_gid=0HYWv1OK3Ahh0ZkVwRSHSw&_nc_ss=7baaf&oh=00_AQGaLp7m1HNOIilTdkbqdymN5gozhJ24tHhldi5FxLiJqQ&oe=6A83767A"
+                  class="avatar-img" alt="Bibesh">
+                <div>
+                  <div class="font-bold">Bibesh Shahi Thakuri</div>
+                  <div class="text-sm text-muted">Volunteer</div>
+                </div>
+              </div>
+              <p class="text-muted leading-relaxed">"VolunteerConnect transformed how I give back. I found a tutoring
+                program that perfectly matches my teaching background. The platform made it seamless to connect and
+                contribute."</p>
+              <div class="star-rating mt-4">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                  class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+            </div>
+            <div class="card-hover testimonial-card bg-amber-light">
+              <i class="fas fa-quote-left quote-icon text-amber-200"></i>
+              <div class="flex-row items-center gap-3 mb-4">
+                <img
+                  src="https://instagram.fktm24-1.fna.fbcdn.net/v/t51.82787-19/758426909_18022016420885089_4385843623942009378_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=107&ccb=7-5&_nc_sid=f7ccc5&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy43MDAuQzMifQ%3D%3D&_nc_ohc=9PnU_1QfVuwQ7kNvwGeZWYR&_nc_oc=Adqg5yeHPpNIPAYOsCmj1drMaTw_pD50UnWw6FQGuGW9FynTt4c0L_oW1wkrxreLdcY&_nc_zt=24&_nc_ht=instagram.fktm24-1.fna&_nc_gid=iD7CoG5sQkfRtK_WK-ftug&_nc_ss=7baaf&oh=00_AQGTk6FKLDLslw9Lv3H411Pr-j084fi4c8w8YsHUFQlSgw&oe=6A838F8C"
+                  class="avatar-img" alt="Sunil">
+                <div>
+                  <div class="font-bold">Sunil Thapa</div>
+                  <div class="text-sm text-muted">NGO Representative</div>
+                </div>
+              </div>
+              <p class="text-muted leading-relaxed">"As an organization, we've onboarded over 200 volunteers through
+                this platform. The application tracking and management tools save us countless hours every week."</p>
+              <div class="star-rating mt-4">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                  class="fas fa-star"></i><i class="fas fa-star"></i>
+              </div>
+            </div>
+            <div class="card-hover testimonial-card bg-forest-light">
+              <i class="fas fa-quote-left quote-icon text-forest-200"></i>
+              <div class="flex-row items-center gap-3 mb-4">
+                <img src="images/suyog.jpg" class="avatar-img" alt="Suyog">
+                <div>
+                  <div class="font-bold">Suyog Pangeni</div>
+                  <div class="text-sm text-muted">Volunteer</div>
+                </div>
+              </div>
+              <p class="text-muted leading-relaxed">"I moved to a new city and wanted to get involved locally. Within a
+                week, I was volunteering at a food bank and had made amazing friends. This platform builds community."
+              </p>
+              <div class="star-rating mt-4">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                  class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
+      <!-- CTA Callout -->
+      <div class="py-24 cta-banner relative text-center">
+        <div class="max-w-4xl container relative z-10">
+          <h2 class="font-display text-5xl font-black text-white mb-6">Ready to Make a Difference?</h2>
+          <p class="text-forest-200 text-lg mb-10 max-w-2xl mx-auto">Join thousands of volunteers and organizations who
+            are creating positive change. Your skills and time can transform lives.</p>
+          <div class="flex-row justify-center gap-4 flex-wrap">
+            <button class="btn btn-accent btn-lg" onclick="showModal('register')">
+              Start Volunteering <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+            <button class="btn btn-glass btn-lg" onclick="showModal('register')">
+              Register Organization
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- HOW IT WORKS -->
-    <section class="how-it-works">
-        <div class="section-header">
-          <h2 class="section-title">How It Works</h2>
+    <!-- ======== OPPORTUNITIES PAGE ======== -->
+    <section class="page-section" id="page-opportunities">
+      <div class="max-w-7xl container py-12">
+        <div class="mb-10">
+          <h1 class="font-display text-4xl font-black mb-2">Volunteer Opportunities</h1>
+          <p class="text-muted">Find the perfect opportunity to match your skills and passion</p>
         </div>
-        <div class="steps-grid">
-          <!-- Step 1 -->
-          <div class="step-card">
-            <div class="step-number">1</div>
-            <h3>Create Account</h3>
-            <p>Sign up as a volunteer or organization in just 2 minutes</p>
-          </div>
-          <!-- Step 2 -->
-          <div class="step-card">
-            <div class="step-number">2</div>
-            <h3>Browse Opportunities</h3>
-            <p>Find volunteer work that matches your skills and interests</p>
-          </div>
-          <!-- Step 3 -->
-          <div class="step-card">
-            <div class="step-number">3</div>
-            <h3>Apply & Connect</h3>
-            <p>Apply to opportunities and get connected with organizations</p>
-          </div>
-          <!-- Step 4 -->
-          <div class="step-card">
-            <div class="step-number">4</div>
-            <h3>Make Impact</h3>
-            <p>Volunteer, help communities, and track your contribution</p>
+
+        <!-- Filter Bar -->
+        <div class="filter-card mb-8">
+          <div class="grid grid-4 gap-4">
+            <div>
+              <label class="form-label">Search</label>
+              <div class="input-icon-wrapper">
+                <i class="fas fa-search input-icon"></i>
+                <input type="text" class="input-field icon-left" placeholder="Search opportunities..."
+                  id="oppSearchInput" oninput="filterOpportunities()">
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Category</label>
+              <select class="input-field" id="oppCategoryFilter" onchange="filterOpportunities()">
+                <option value="">All Categories</option>
+                <option value="Environment">Environment</option>
+                <option value="Education">Education</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Community">Community</option>
+                <option value="Technology">Technology</option>
+                <option value="Animals">Animals</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Location</label>
+              <select class="input-field" id="oppLocationFilter" onchange="filterOpportunities()">
+                <option value="">All Locations</option>
+                <option value="Kathmandu">Kathmandu</option>
+                <option value="Lalipur">Lalitpur</option>
+                <option value="Bhaktapur">Bhaktapur</option>
+                <option value="Pokhara">Pokhara</option>
+                <option value="Remote">Remote</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Time Commitment</label>
+              <select class="input-field" id="oppTimeFilter" onchange="filterOpportunities()">
+                <option value="">Any Duration</option>
+                <option value="One-time">One-time</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Weekends">Weekends</option>
+                <option value="Flexible">Flexible</option>
+              </select>
+            </div>
           </div>
         </div>
-      </section>
 
- 
-  <!-- ============================================================ -->
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <!-- ============================================================ -->
-  <!-- Toast messages appear here for success/error notifications -->
-  <div id="toastContainer" class="toast-container"></div>
-
-  <!-- Link to our custom JavaScript file - handles all interactions -->
-  <script src="script.js"></script>
-
-  <!-- Include Chart.js for creating charts and graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-
-
-
-
-
-
-
-<!-- FEATURED OPPORTUNITIES -->
-      <section class="featured-opportunities" id="featured-opportunities">
-        <div class="section-header">
-          <p class="eyebrow">Featured opportunities</p>
-          <h2 class="section-title">Choose a cause that matches your energy</h2>
+        <!-- Results Toolbar -->
+        <div class="flex-row items-center justify-between mb-6">
+          <span class="text-muted text-sm" id="oppResultCount">Showing 0 opportunities</span>
+          <div class="view-toggle flex-row gap-2">
+            <button class="toggle-btn active" id="gridViewBtn" onclick="setOppView('grid')"><i
+                class="fas fa-th-large"></i></button>
+            <button class="toggle-btn" id="listViewBtn" onclick="setOppView('list')"><i
+                class="fas fa-list"></i></button>
+          </div>
         </div>
-        <div class="featured-grid" id="featuredGrid"></div>
-        <div class="section-actions">
-          <button class="btn-primary" onclick="navigateTo('opportunities')">View More</button>
+
+        <!-- Opportunities Display Grid -->
+        <div class="grid grid-3 gap-6" id="opportunitiesGrid"></div>
+      </div>
+    </section>
+
+    <!-- ======== ABOUT PAGE ======== -->
+    <section class="page-section" id="page-about">
+      <div class="max-w-7xl container py-12">
+        <div class="grid grid-2-lg gap-16 items-center mb-20">
+          <div>
+            <span class="text-primary font-semibold text-sm uppercase tracking-wider">About Us</span>
+            <h1 class="font-display text-5xl font-black mt-3 mb-6">Building Bridges <span class="gradient-text">Since
+                2024</span></h1>
+            <p class="text-muted leading-relaxed mb-6">VolunteerConnect was born from a simple observation: millions of
+              people want to volunteer, and thousands of organizations need help, but connecting them is harder than it
+              should be. We're changing that.</p>
+            <p class="text-muted leading-relaxed mb-8">Our platform provides the tools, trust, and transparency needed
+              to create meaningful volunteer experiences that benefit both individuals and communities.</p>
+            <div class="grid grid-2 gap-6">
+              <div class="info-stat-card bg-forest-light">
+                <div class="text-3xl font-black text-forest-800 mb-1">2.5+</div>
+                <div class="text-sm text-muted">Years of Service</div>
+              </div>
+              <div class="info-stat-card bg-amber-light">
+                <div class="text-3xl font-black text-amber-600 mb-1">100%</div>
+                <div class="text-sm text-muted">Satisfaction Rate</div>
+              </div>
+            </div>
+          </div>
+          <div class="relative">
+            <img src="https://cloudfront-us-east-2.images.arcpublishing.com/reuters/QR6LVMRUOFJCXBWEMJI45IG2TY.jpg"
+              class="rounded-3xl shadow-2xl img-responsive" alt="About VolunteerConnect">
+            <!-- <div class="floating-award-card">
+              <div class="flex-row items-center gap-4">
+                <div class="award-icon-box bg-gradient-forest">
+                  <i class="fas fa-award text-white text-xl"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-lg">Award Winning</div>
+                  <div class="text-sm text-muted">Best NGO Platform 2025</div>
+                </div> -->
+          </div>
         </div>
-      </section>
- 
-      
-  <!-- TOAST NOTIFICATION -->
-  <div id="toastContainer" class="toast-container"></div>
- 
-  <!-- Scripts -->
-  <script src="script.js"></script>
+      </div>
+      </div>
+
+      <!-- Core Values -->
+      <div class="text-center mb-12">
+        <h2 class="font-display text-4xl font-black">Our Core Values</h2>
+      </div>
+      <div class="grid grid-4 gap-6 mb-20">
+        <div class="value-card">
+          <div class="circle-icon bg-forest-light mx-auto mb-4"><i class="fas fa-shield-alt text-primary text-2xl"></i>
+          </div>
+          <h3 class="font-bold mb-2">Trust</h3>
+          <p class="text-sm text-muted">Verified organizations and transparent processes</p>
+        </div>
+        <div class="value-card">
+          <div class="circle-icon bg-amber-light mx-auto mb-4"><i class="fas fa-users text-accent text-2xl"></i></div>
+          <h3 class="font-bold mb-2">Community</h3>
+          <p class="text-sm text-muted">Building connections that last beyond volunteering</p>
+        </div>
+        <div class="value-card">
+          <div class="circle-icon bg-forest-light mx-auto mb-4"><i class="fas fa-lightbulb text-primary text-2xl"></i>
+          </div>
+          <h3 class="font-bold mb-2">Innovation</h3>
+          <p class="text-sm text-muted">Leveraging technology for social good</p>
+        </div>
+        <div class="value-card">
+          <div class="circle-icon bg-amber-light mx-auto mb-4"><i class="fas fa-heart text-accent text-2xl"></i></div>
+          <h3 class="font-bold mb-2">Impact</h3>
+          <p class="text-sm text-muted">Measuring and celebrating real outcomes</p>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div class="text-center mb-12">
+        <h2 class="font-display text-4xl font-black">Our Team</h2>
+        <p class="text-muted mt-2">Passionate people driving change</p>
+      </div>
+      <div class="grid grid-4 gap-6">
+        <div class="card-hover team-card">
+          <img src="images/bibesh1.jpg" class="team-avatar" alt="Team member">
+          <h4 class="font-bold">Bibesh Shahi Thakuri</h4>
+          <p class="text-sm text-muted">Backend Developer</p>
+        </div>
+        <div class="card-hover team-card">
+          <img src="images/sujan.jpg" class="team-avatar" alt="Team member">
+          <h4 class="font-bold">Sujan Timalsina</h4>
+          <p class="text-sm text-muted">Frontend Developer</p>
+        </div>
+        <div class="card-hover team-card">
+          <img src="images/defult.jpg" class="team-avatar" alt="Team member">
+          <h4 class="font-bold">Team Member</h4>
+          <p class="text-sm text-muted">Admin</p>
+        </div>
+        <div class="card-hover team-card">
+          <img src="images/defult.jpg" class="team-avatar" alt="Team member">
+          <h4 class="font-bold">Team Member</h4>
+          <p class="text-sm text-muted">Community Manager</p>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ======== CONTACT PAGE ======== -->
+    <section class="page-section" id="page-contact">
+      <div class="max-w-7xl container py-12">
+        <div class="text-center mb-12">
+          <h1 class="font-display text-5xl font-black mb-3">Get In Touch</h1>
+          <p class="text-muted max-w-lg mx-auto">Have questions, suggestions, or want to partner with us? We'd love to
+            hear from you.</p>
+        </div>
+        <div class="grid grid-3-lg gap-8">
+          <div class="col-span-2">
+            <div class="contact-form-card">
+              <form onsubmit="handleContactForm(event)">
+                <div class="grid grid-2 gap-4 mb-4">
+                  <div><label class="form-label">Full Name</label><input type="text" class="input-field"
+                      placeholder="Your name" required id="contactName"></div>
+                  <div><label class="form-label">Email</label><input type="email" class="input-field"
+                      placeholder="you@email.com" required id="contactEmail"></div>
+                </div>
+                <div class="mb-4"><label class="form-label">Subject</label><input type="text" class="input-field"
+                    placeholder="How can we help?" required id="contactSubject"></div>
+                <div class="mb-6"><label class="form-label">Message</label><textarea class="input-field" rows="5"
+                    placeholder="Your message..." required id="contactMessage"></textarea></div>
+                <button type="submit" class="btn btn-primary">Send Message <i
+                    class="fas fa-paper-plane ml-2"></i></button>
+              </form>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <div class="info-box bg-forest-light">
+              <div class="flex-row items-center gap-3 mb-3">
+                <div class="icon-sq bg-forest-600"><i class="fas fa-map-marker-alt text-primary"></i></div>
+                <h3 class="font-bold">Office</h3>
+              </div>
+              <p class="text-muted text-sm">Located at Lainchaur-26<br>Kathmandu, Nepal</p>
+            </div>
+            <div class="info-box bg-amber-light">
+              <div class="flex-row items-center gap-3 mb-3">
+                <div class="icon-sq bg-amber-500"><i class="fas fa-envelope text-primary"></i></div>
+                <h3 class="font-bold">Email</h3>
+              </div>
+              <p class="text-muted text-sm">hello@volunteerconnect.org<br>support@volunteerconnect.org</p>
+            </div>
+            <div class="info-box bg-forest-light">
+              <div class="flex-row items-center gap-3 mb-3">
+                <div class="icon-sq bg-forest-600"><i class="fas fa-phone text-primary"></i></div>
+                <h3 class="font-bold">Phone</h3>
+              </div>
+              <p class="text-muted text-sm">01-4123450<br>Mon-Fri, 9AM-6PM PST</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== VOLUNTEER DASHBOARD ======== -->
+    <section class="page-section" id="page-volunteer-dashboard">
+      <div class="max-w-7xl container py-8">
+        <div class="flex-row items-center justify-between mb-8 flex-wrap gap-4">
+          <div>
+            <h1 class="font-display text-3xl font-black mb-1">Volunteer Dashboard</h1>
+            <p class="text-muted">Welcome back, <span id="volDashName">Volunteer</span></p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('opportunities')"><i
+              class="fas fa-search mr-2"></i>Find Opportunities</button>
+        </div>
+
+        <!-- Dashboard Stats (live from API) -->
+        <div class="grid grid-3 gap-4 mb-8">
+          <div class="stat-card green">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Total Applications</div>
+                <div class="text-2xl font-black" id="volStatApps">—</div>
+              </div>
+              <div class="stat-icon-bg bg-forest-50"><i class="fas fa-file-alt text-primary"></i></div>
+            </div>
+          </div>
+          <div class="stat-card amber">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Approved</div>
+                <div class="text-2xl font-black" id="volStatActive">—</div>
+              </div>
+              <div class="stat-icon-bg bg-amber-50"><i class="fas fa-check-circle text-accent"></i></div>
+            </div>
+          </div>
+          <div class="stat-card blue">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Pending Review</div>
+                <div class="text-2xl font-black" id="volStatHours">—</div>
+              </div>
+              <div class="stat-icon-bg bg-blue-50"><i class="fas fa-clock text-info"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application Tracking Table -->
+        <div class="table-container">
+          <div class="table-header">
+            <h3 class="font-bold">My Applications</h3>
+            <div class="relative">
+              <i class="fas fa-search input-icon"></i>
+              <input type="text" class="input-field icon-left text-sm" placeholder="Search applications..."
+                id="volAppSearch" oninput="filterVolApps()" style="min-width:220px;">
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Opportunity</th>
+                  <th>Organization</th>
+                  <th>Applied</th>
+                  <th>Status</th>
+                  <th>Location</th>
+                </tr>
+              </thead>
+              <tbody id="volAppsTableBody">
+                <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== ORGANIZATION DASHBOARD ======== -->
+
+    <section class="page-section" id="page-org-dashboard">
+      <div class="max-w-7xl container py-8">
+        <div class="flex-row items-center justify-between mb-8 flex-wrap gap-4">
+          <div>
+            <h1 class="font-display text-3xl font-black mb-1">Organization Dashboard</h1>
+            <p class="text-muted">Manage your opportunities and volunteer applications</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showModal('createOpportunity')"><i
+              class="fas fa-plus mr-2"></i>Create Opportunity</button>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="grid grid-3 gap-4 mb-8">
+          <div class="stat-card green">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Active Listings</div>
+                <div class="text-2xl font-black" id="orgStatListings">—</div>
+              </div>
+              <div class="stat-icon-bg bg-forest-50"><i class="fas fa-bullhorn text-primary"></i></div>
+            </div>
+          </div>
+          <div class="stat-card amber">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Total Applicants</div>
+                <div class="text-2xl font-black" id="orgStatApplicants">—</div>
+              </div>
+              <div class="stat-icon-bg bg-amber-50"><i class="fas fa-users text-accent"></i></div>
+            </div>
+          </div>
+          <div class="stat-card blue">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Approved Volunteers</div>
+                <div class="text-2xl font-black" id="orgStatVolunteers">—</div>
+              </div>
+              <div class="stat-icon-bg bg-blue-50"><i class="fas fa-user-check text-info"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabbed Section -->
+        <div class="table-container">
+          <div class="tab-header flex-row">
+            <button class="tab-btn active" onclick="switchOrgTab('opps',this)">My Opportunities</button>
+            <button class="tab-btn" onclick="switchOrgTab('apps',this)">Applications</button>
+          </div>
+
+          <!-- Opportunities Tab -->
+          <div id="org-tab-opps">
+            <div class="table-header">
+              <h3 class="font-bold">Manage Opportunities</h3>
+              <div class="relative"><i class="fas fa-search input-icon"></i><input type="text"
+                  class="input-field icon-left text-sm" placeholder="Search..." id="orgOppSearch"
+                  oninput="filterOrgOpps()" style="min-width:200px;"></div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Filled / Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="orgOppsTableBody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Applications Tab -->
+          <div id="org-tab-apps" class="hidden">
+            <div class="table-header">
+              <h3 class="font-bold">Volunteer Applications</h3>
+              <button class="btn btn-outline btn-sm" onclick="initOrgDashboard()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Volunteer</th>
+                    <th>Opportunity</th>
+                    <th>Applied</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="orgAppsTableBody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== ADMIN DASHBOARD ======== -->
+
+    <section class="page-section" id="page-admin-dashboard">
+      <div class="max-w-7xl container py-8">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-black mb-1">Admin Dashboard</h1>
+          <p class="text-muted">Platform management — live data from database</p>
+        </div>
+
+        <!-- Live Stats (populated by JS) -->
+        <div class="grid grid-4 gap-4 mb-8">
+          <div class="stat-card green">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Volunteers</div>
+                <div class="text-2xl font-black" id="adminStatUsers">—</div>
+              </div>
+              <div class="stat-icon-bg bg-forest-50"><i class="fas fa-users text-primary"></i></div>
+            </div>
+          </div>
+          <div class="stat-card amber">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Active Orgs</div>
+                <div class="text-2xl font-black" id="adminStatOrgs">—</div>
+              </div>
+              <div class="stat-icon-bg bg-amber-50"><i class="fas fa-building text-accent"></i></div>
+            </div>
+          </div>
+          <div class="stat-card blue">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Active Opportunities</div>
+                <div class="text-2xl font-black" id="adminStatOpps">—</div>
+              </div>
+              <div class="stat-icon-bg bg-blue-50"><i class="fas fa-briefcase text-info"></i></div>
+            </div>
+          </div>
+          <div class="stat-card red">
+            <div class="flex-row items-center justify-between">
+              <div>
+                <div class="text-sm text-muted mb-1">Pending Requests</div>
+                <div class="text-2xl font-black" id="adminStatPending">—</div>
+              </div>
+              <div class="stat-icon-bg bg-red-50"><i class="fas fa-clock text-danger"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Tabs -->
+        <div class="table-container">
+          <div class="tab-header flex-row overflow-x-auto" style="gap:0;">
+            <button class="tab-btn active" onclick="switchAdminTab('pending',this)" id="adminTabPending"
+              style="position:relative;">
+              Org Requests
+              <span id="adminPendingBadge" style="display:none;position:absolute;top:6px;right:6px;background:#ef4444;color:#fff;border-radius:9999px;font-size:11px;min-width:18px;height:18px;padding:0 4px;align-items:center;justify-content:center;font-weight:700;">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('users',this)">Volunteers</button>
+            <button class="tab-btn" onclick="switchAdminTab('orgs',this)">All Organizations</button>
+            <button class="tab-btn" onclick="switchAdminTab('opps',this)">Opportunities</button>
+          </div>
+
+          <!-- Pending Organization Requests Tab -->
+          <div class="admin-tab-content" id="admin-tab-pending">
+            <div class="table-header">
+              <div>
+                <span class="font-semibold">Organization Account Requests</span>
+                <p class="text-xs text-muted mt-1">Review and approve or reject organizations waiting for verification.</p>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="loadAdminPendingOrgs()">
+                <i class="fas fa-sync-alt mr-1"></i>Refresh
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Organization Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Description</th>
+                    <th>Requested</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminPendingOrgsTableBody">
+                  <tr><td colspan="6" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Volunteers Tab -->
+          <div class="admin-tab-content hidden" id="admin-tab-users">
+            <div class="table-header">
+              <span class="text-sm text-muted">All registered volunteers</span>
+              <div class="flex-row gap-3 items-center">
+                <div class="relative"><i class="fas fa-search input-icon"></i><input type="text"
+                    class="input-field icon-left text-sm" placeholder="Search users..." id="adminUserSearch"
+                    oninput="filterAdminUsers()" style="min-width:200px;"></div>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                  <tr><td colspan="6" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- All Organizations Tab -->
+          <div class="admin-tab-content hidden" id="admin-tab-orgs">
+            <div class="table-header">
+              <span class="text-sm text-muted">All registered organizations</span>
+              <button class="btn btn-outline btn-sm" onclick="loadAdminOrgs()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Organization</th>
+                    <th>Email</th>
+                    <th>Active Opps</th>
+                    <th>Volunteers</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOrgsTableBody">
+                  <tr><td colspan="6" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Opportunities Tab -->
+          <div class="admin-tab-content hidden" id="admin-tab-opps">
+            <div class="table-header">
+              <span class="text-sm text-muted">All volunteer opportunities on the platform</span>
+              <button class="btn btn-outline btn-sm" onclick="loadAdminOpportunities()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Organization</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Applicants</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOppsTableBody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== PROFILE PAGE ======== -->
+    <section class="page-section" id="page-profile">
+      <div class="max-w-4xl container py-12">
+        <h1 class="font-display text-3xl font-black mb-8">My Profile</h1>
+        <div class="grid grid-3-lg gap-8">
+          <!-- Avatar Card -->
+          <div class="profile-card text-center">
+            <div class="avatar-circle-lg mx-auto mb-4" id="profileAvatar">V</div>
+            <h3 class="font-bold text-lg" id="profileDisplayName">Volunteer User</h3>
+            <p class="text-sm text-muted mb-4" id="profileDisplayRole">Volunteer</p>
+            <span class="badge badge-success mb-4"><i class="fas fa-check-circle mr-1"></i>Verified</span>
+            <div class="profile-info-list">
+              <div class="profile-info-item"><i class="fas fa-map-marker-alt text-primary"></i><span
+                  id="profileDisplayLocation">San Francisco, CA</span></div>
+              <div class="profile-info-item"><i class="fas fa-calendar text-primary"></i><span>Joined Jan 2024</span>
+              </div>
+              <div class="profile-info-item"><i class="fas fa-clock text-primary"></i><span>48 hours logged</span></div>
+            </div>
+          </div>
+
+          <!-- Profile Form -->
+          <div class="col-span-2 profile-card">
+            <h3 class="font-bold text-lg mb-6">Edit Profile</h3>
+            <form onsubmit="handleProfileSave(event)">
+              <div class="grid grid-2 gap-4 mb-4">
+                <div><label class="form-label">First Name</label><input type="text" class="input-field"
+                    id="profileFirstName" value="Volunteer"></div>
+                <div><label class="form-label">Last Name</label><input type="text" class="input-field"
+                    id="profileLastName" value="User"></div>
+              </div>
+              <div class="mb-4"><label class="form-label">Email</label><input type="email" class="input-field"
+                  id="profileEmail" value="volunteer@example.com"></div>
+              <div class="mb-4"><label class="form-label">Phone</label><input type="tel" class="input-field"
+                  id="profilePhone" placeholder="+1 (555) 000-0000"></div>
+              <div class="mb-4"><label class="form-label">Location</label><input type="text" class="input-field"
+                  id="profileLocation" value="San Francisco, CA"></div>
+              <div class="mb-4"><label class="form-label">Bio</label><textarea class="input-field" rows="3"
+                  id="profileBio" placeholder="Tell organizations about yourself..."></textarea></div>
+              <div class="mb-6"><label class="form-label">Skills</label><input type="text" class="input-field"
+                  id="profileSkills" placeholder="e.g., Teaching, First Aid, Web Development"></div>
+              <div class="flex-row gap-3">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-outline" onclick="navigateTo(dashboardRoute())">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer" id="mainFooter">
+    <div class="max-w-7xl container">
+      <div class="grid grid-4 gap-10 mb-12">
+        <div>
+          <div class="logo mb-4">
+            <div class="logo-icon bg-gradient-forest">
+              <i class="fas fa-hands-helping text-white"></i>
+            </div>
+            <span class="logo-text text-white"><span class="text-accent"> Volunteer Connect</span></span>
+          </div>
+          <p class="text-forest-300 text-sm leading-relaxed">Bridging the gap between passionate volunteers and
+            impactful organizations worldwide.</p>
+        </div>
+        <div>
+          <h4 class="font-bold mb-4 text-white">Platform</h4>
+          <ul class="footer-links">
+            <li><a onclick="navigateTo('opportunities')">Find Opportunities</a></li>
+            <li><a onclick="showModal('register')">Become a Volunteer</a></li>
+            <li><a onclick="showModal('register')">Register Organization</a></li>
+            <li><a onclick="navigateTo('about')">About Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold mb-4 text-white">Resources</h4>
+          <ul class="footer-links">
+            <li><a>Help Center</a></li>
+            <li><a>Safety Guidelines</a></li>
+            <li><a>Volunteer Handbook</a></li>
+            <li><a>Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold mb-4 text-white">Stay Connected</h4>
+          <p class="text-sm text-forest-300 mb-4">Get updates on new opportunities and impact stories.</p>
+          <form onsubmit="event.preventDefault();toast('Subscribed successfully','success');" class="flex-row gap-2">
+            <input type="email" class="input-field footer-input" placeholder="Email address" required>
+            <button type="submit" class="btn btn-accent btn-sm">Subscribe</button>
+          </form>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="text-sm text-forest-400">&copy; 2026 VolunteerConnect. All rights reserved.</p>
+        <div class="social-icons">
+          <a class="social-btn"><i class="fab fa-twitter"></i></a>
+          <a class="social-btn"><i class="fab fa-facebook-f"></i></a>
+          <a class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+          <a class="social-btn"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ MODALS ============ -->
+
+  <!-- Login Modal -->
+  <div class="modal-overlay hidden" id="modal-login" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="font-display text-2xl font-black">Welcome Back</h2>
+        <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form onsubmit="handleLogin(event)">
+        <div class="mb-4"><label class="form-label">Email</label><input type="email" class="input-field"
+            placeholder="you@email.com" required id="loginEmail"></div>
+        <div class="mb-4"><label class="form-label">Password</label><input type="password" class="input-field"
+            placeholder="Enter password" required id="loginPassword"></div>
+        <div class="flex-row items-center justify-between mb-6">
+          <label class="flex-row items-center gap-2 text-sm"><input type="checkbox"> Remember me</label>
+          <a class="text-sm text-primary font-semibold hover-underline cursor-pointer">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary w-full mb-4">Sign In</button>
+        <div class="text-center text-sm text-muted">Don't have an account? <a
+            class="text-primary font-semibold hover-underline cursor-pointer"
+            onclick="closeModal();showModal('register')">Sign up</a></div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal-overlay hidden" id="modal-register" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="font-display text-2xl font-black">Join VolunteerConnect</h2>
+        <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form onsubmit="handleRegister(event)">
+        <div class="mb-6">
+          <label class="form-label mb-2">I want to join as:</label>
+          <div class="grid grid-2 gap-3">
+            <label class="role-card-label">
+              <input type="radio" name="regRole" value="volunteer" class="hidden-radio" checked>
+              <div class="role-card-box volunteer">
+                <i class="fas fa-hand-holding-heart text-2xl text-primary mb-2"></i>
+                <div class="font-bold text-sm">Volunteer</div>
+              </div>
+            </label>
+            <label class="role-card-label">
+              <input type="radio" name="regRole" value="organization" class="hidden-radio">
+              <div class="role-card-box organization">
+                <i class="fas fa-building text-2xl text-accent mb-2"></i>
+                <div class="font-bold text-sm">Organization</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label">Full Name</label><input type="text" class="input-field" placeholder="Your name"
+              required id="regName"></div>
+          <div><label class="form-label">Email</label><input type="email" class="input-field"
+              placeholder="you@email.com" required id="regEmail"></div>
+        </div>
+        <div class="mb-4"><label class="form-label">Password</label><input type="password" class="input-field"
+            placeholder="Min 8 characters" required id="regPassword" minlength="8"></div>
+        <div class="mb-6"><label class="form-label">Confirm Password</label><input type="password" class="input-field"
+            placeholder="Repeat password" required id="regConfirm"></div>
+        <button type="submit" class="btn btn-primary w-full mb-4">Create Account</button>
+        <div class="text-center text-sm text-muted">Already have an account? <a
+            class="text-primary font-semibold hover-underline cursor-pointer"
+            onclick="closeModal();showModal('login')">Sign in</a></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Opportunity Modal -->
+  <div class="modal-overlay hidden" id="modal-createOpportunity" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="font-display text-2xl font-black">Create Opportunity</h2>
+        <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form onsubmit="handleCreateOpportunity(event)">
+        <div class="mb-4"><label class="form-label">Title</label><input type="text" class="input-field"
+            placeholder="e.g., Weekend Tutoring Program" required id="oppTitle"></div>
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label">Category</label>
+            <select class="input-field" id="oppCategory" required>
+              <option value="">Select...</option>
+              <option>Environment</option>
+              <option>Education</option>
+              <option>Healthcare</option>
+              <option>Community</option>
+              <option>Technology</option>
+              <option>Animals</option>
+            </select>
+          </div>
+          <div><label class="form-label">Location</label>
+            <select class="input-field" id="oppLocation" required>
+              <option value="">Select...</option>
+              <option>Downtown</option>
+              <option>Midtown</option>
+              <option>Eastside</option>
+              <option>Westside</option>
+              <option>Remote</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label">Time Commitment</label>
+            <select class="input-field" id="oppTime" required>
+              <option value="">Select...</option>
+              <option>One-time</option>
+              <option>Weekly</option>
+              <option>Weekends</option>
+              <option>Flexible</option>
+            </select>
+          </div>
+          <div><label class="form-label">Volunteers Needed</label><input type="number" class="input-field"
+              placeholder="10" min="1" required id="oppSpots"></div>
+        </div>
+        <div class="mb-4"><label class="form-label">Start Date</label><input type="date" class="input-field" required
+            id="oppDate"></div>
+        <div class="mb-6"><label class="form-label">Description</label><textarea class="input-field" rows="4"
+            placeholder="Describe the opportunity, requirements, and impact..." required id="oppDesc"></textarea></div>
+        <button type="submit" class="btn btn-primary w-full">Publish Opportunity</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Opportunity Detail Modal -->
+  <div class="modal-overlay hidden" id="modal-opportunityDetail" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content" id="oppDetailContent"></div>
+  </div>
+
 </body>
+
 </html>
- 
