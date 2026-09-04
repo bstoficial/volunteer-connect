@@ -7,11 +7,13 @@ A platform that connects volunteers with NGOs(organizations and community servic
 - Sujan Timalsina
 
 ## Technology Stack
-- HTML(Vanilla)
-- CSS(vanilla)
+- HTML
+- CSS
 - JavaScript
 - PHP
 - MySQL
 
 ## Project Status
-Planning Phase
+Requirement Analysis.
+System Design.
+implementation...
