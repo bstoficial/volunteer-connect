@@ -4,6 +4,38 @@
 // ============================================================
 
 const API = './backend/api/api.php';
+const NEPAL_DISTRICTS = [
+    'Achham', 'Arghakhanchi', 'Baglung', 'Baitadi', 'Bajhang', 'Bajura', 'Banke', 'Bara',
+    'Bardiya', 'Bhaktapur', 'Bhojpur', 'Chitwan', 'Dadeldhura', 'Dailekh', 'Dang', 'Darchula',
+    'Dhading', 'Dhankuta', 'Dhanusha', 'Dolakha', 'Dolpa', 'Doti', 'Gorkha', 'Gulmi', 'Humla',
+    'Ilam', 'Jajarkot', 'Jhapa', 'Jumla', 'Kailali', 'Kalikot', 'Kanchanpur', 'Kapilvastu', 'Kaski',
+    'Kathmandu', 'Kavrepalanchok', 'Khotang', 'Lalitpur', 'Lamjung', 'Mahottari', 'Makwanpur',
+    'Manang', 'Morang', 'Mugu', 'Mustang', 'Myagdi', 'Nawalpur', 'Nuwakot', 'Okhaldhunga',
+    'Palpa', 'Panchthar', 'Parasi', 'Parbat', 'Parsa', 'Pyuthan', 'Ramechhap', 'Rasuwa',
+    'Rautahat', 'Rolpa', 'Rukum East', 'Rukum West', 'Rupandehi', 'Salyan', 'Sankhuwasabha',
+    'Saptari', 'Sarlahi', 'Sindhuli', 'Sindhupalchok', 'Siraha', 'Solukhumbu', 'Sunsari',
+    'Surkhet', 'Syangja', 'Tanahun', 'Taplejung', 'Tehrathum', 'Udayapur'
+];
+const OPPORTUNITY_TIMES = ['Morning', 'Afternoon', 'Evening', 'Night'];
+
+function populateOpportunityOptions() {
+    const locationOptions = '<option value="">Select...</option>' + NEPAL_DISTRICTS
+        .concat('Remote').map(location => `<option value="${location}">${location}</option>`).join('');
+    const filterLocationOptions = '<option value="">All Locations</option>' + NEPAL_DISTRICTS
+        .concat('Remote').map(location => `<option value="${location}">${location}</option>`).join('');
+    const timeOptions = '<option value="">Select...</option>' + OPPORTUNITY_TIMES
+        .map(time => `<option value="${time}">${time}</option>`).join('');
+    const filterTimeOptions = '<option value="">Any Time</option>' + OPPORTUNITY_TIMES
+        .map(time => `<option value="${time}">${time}</option>`).join('');
+    const locationFilter = document.getElementById('oppLocationFilter');
+    const locationInput = document.getElementById('oppLocation');
+    const timeFilter = document.getElementById('oppTimeFilter');
+    const timeInput = document.getElementById('oppTime');
+    if (locationFilter) locationFilter.innerHTML = filterLocationOptions;
+    if (locationInput) locationInput.innerHTML = locationOptions;
+    if (timeFilter) timeFilter.innerHTML = filterTimeOptions;
+    if (timeInput) timeInput.innerHTML = timeOptions;
+}
 
 // Application State
 let currentUser = null;
@@ -11,9 +43,11 @@ let currentPage = 'home';
 let oppViewMode = 'grid';
 let allOpportunities = []; // cached from server
 let adminRefreshTimer = null;
+let opportunityRefreshTimer = null;
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    populateOpportunityOptions();
     animateCounterNumbers();
     loadFeaturedOpportunities();
 });
@@ -26,10 +60,10 @@ async function apiFetch(action, params = {}, method = 'GET', body = null) {
 
     const opts = {
         method,
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: body instanceof FormData ? { 'Accept': 'application/json' } : { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         credentials: 'same-origin'
     };
-    if (body) opts.body = JSON.stringify(body);
+    if (body) opts.body = body instanceof FormData ? body : JSON.stringify(body);
 
     const res = await fetch(url.toString(), opts);
     const text = await res.text();
@@ -64,6 +98,14 @@ function navigateTo(page) {
     if (page === 'org-dashboard') initOrgDashboard();
     if (page === 'admin-dashboard') initAdminDashboard();
     if (page === 'profile') initProfile();
+
+    if (opportunityRefreshTimer) {
+        clearInterval(opportunityRefreshTimer);
+        opportunityRefreshTimer = null;
+    }
+    if (page === 'opportunities') {
+        opportunityRefreshTimer = setInterval(() => filterOpportunities(), 15000);
+    }
 }
 
 function dashboardRoute() {
@@ -88,7 +130,9 @@ function switchOrgTab(tabName, btn) {
     btn.classList.add('active');
     document.getElementById('org-tab-opps').classList.add('hidden');
     document.getElementById('org-tab-apps').classList.add('hidden');
+    document.getElementById('org-tab-all-opps').classList.add('hidden');
     document.getElementById('org-tab-' + tabName)?.classList.remove('hidden');
+    if (tabName === 'all-opps') loadOrgAllOpportunities();
 }
 
 
@@ -217,13 +261,16 @@ function showOppDetail(id) {
       <p class="text-sm text-muted">Hosted by <strong>${escHtml(opp.org || opp.org_name || '')}</strong></p>
     </div>
     <p class="text-muted leading-relaxed mb-6">${escHtml(opp.desc || opp.description || '')}</p>
+    ${opp.opportunity_image ? `<a class="btn btn-outline btn-sm mb-4" href="${escHtml(new URL(opp.opportunity_image, window.location.href).href)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-image mr-1"></i>View attached image</a>` : ''}
     <div class="grid grid-2 gap-4 mb-6 bg-forest-light p-4 rounded-xl">
       <div><span class="text-xs text-muted block">Location</span><strong>${escHtml(opp.location)}</strong></div>
       <div><span class="text-xs text-muted block">Commitment</span><strong>${escHtml(opp.time || opp.time_commitment || '')}</strong></div>
       <div><span class="text-xs text-muted block">Start Date</span><strong>${escHtml(opp.date || opp.start_date || '')}</strong></div>
       <div><span class="text-xs text-muted block">Spots Available</span><strong>${spots - filled} left of ${spots}</strong></div>
     </div>
-    <button class="btn btn-primary w-full" onclick="applyToOpp(${opp.id})">Apply Now</button>`;
+    ${((typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser)?.role === 'organization')
+        ? '<p class="text-sm text-muted text-center">Organizations can view opportunities but cannot apply.</p>'
+        : `<button class="btn btn-primary w-full" onclick="applyToOpp(${opp.id})">Apply Now</button>`}`;
     showModal('opportunityDetail');
 }
 
@@ -236,6 +283,7 @@ async function applyToOpp(id) {
         if (data.success) {
             toast(data.message || 'Application submitted!', 'success');
             closeModal();
+            await filterOpportunities();
         } else {
             toast(data.message || 'Could not apply.', 'error');
         }
@@ -251,6 +299,7 @@ async function initVolunteerDashboard() {
 
     const nameEl = document.getElementById('volDashName');
     if (nameEl) nameEl.textContent = user.name;
+    loadProfileData();
 
     // Load stats
     try {
@@ -361,6 +410,22 @@ function renderOrgOppsTable(opps) {
     }).join('');
 }
 
+async function loadOrgAllOpportunities() {
+    const grid = document.getElementById('orgAllOpportunitiesGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+    try {
+        const data = await apiFetch('opportunities');
+        const opportunities = data.opportunities || [];
+        allOpportunities = opportunities;
+        grid.innerHTML = opportunities.length
+            ? opportunities.map(renderOppCard).join('')
+            : '<div class="text-center text-muted">No opportunities found.</div>';
+    } catch {
+        grid.innerHTML = '<div class="text-center text-muted">Could not load opportunities.</div>';
+    }
+}
+
 function renderOrgAppsTable(apps) {
     const tbody = document.getElementById('orgAppsTableBody');
     if (!tbody) return;
@@ -388,6 +453,8 @@ async function updateOrgApp(appId, status) {
             toast(data.message, 'success');
             const a = await apiFetch('org_applications');
             if (a.success) renderOrgAppsTable(a.applications || []);
+            const o = await apiFetch('org_opportunities');
+            if (o.success) renderOrgOppsTable(o.opportunities || []);
         } else {
             toast(data.message || 'Failed to update.', 'error');
         }
@@ -428,19 +495,24 @@ async function handleCreateOpportunity(e) {
     e.preventDefault();
     const form    = e.target;
     const editId  = form.dataset.editId;
+    const image = document.getElementById('oppImage')?.files?.[0];
+    if (image && image.size > 500 * 1024) {
+        toast('Opportunity image must be 500 KB or smaller.', 'error');
+        return;
+    }
 
-    const payload = {
-        title:       document.getElementById('oppTitle').value,
-        category:    document.getElementById('oppCategory').value,
-        location:    document.getElementById('oppLocation').value,
-        time:        document.getElementById('oppTime').value,
-        spots:       parseInt(document.getElementById('oppSpots').value),
-        date:        document.getElementById('oppDate').value,
-        description: document.getElementById('oppDesc').value,
-    };
+    const payload = new FormData();
+    payload.append('title', document.getElementById('oppTitle').value);
+    payload.append('category', document.getElementById('oppCategory').value);
+    payload.append('location', document.getElementById('oppLocation').value);
+    payload.append('time', document.getElementById('oppTime').value);
+    payload.append('spots', document.getElementById('oppSpots').value);
+    payload.append('date', document.getElementById('oppDate').value);
+    payload.append('description', document.getElementById('oppDesc').value);
+    if (image) payload.append('opportunity_image', image);
 
     const action = editId ? 'update_opportunity' : 'create_opportunity';
-    if (editId) payload.id = editId;
+    if (editId) payload.append('id', editId);
 
     try {
         const data = await apiFetch(action, {}, 'POST', payload);
@@ -745,29 +817,46 @@ function renderAdminOppsTable(opps) {
 }
 
 // ── Profile ───────────────────────────────────────────────────
-async function initProfile() {
+function renderProfileData(p, user) {
+    const name = p.name || '';
+    const bio = p.bio || p.description || 'Add a short bio from your profile.';
+    const imageUrl = p.profile_image ? new URL(p.profile_image, window.location.href).href : '';
+    const avatarIds = ['profileAvatar', 'dashboardProfileAvatar', 'avatarInitial'];
+    avatarIds.forEach(id => {
+        const avatar = document.getElementById(id);
+        if (!avatar) return;
+        avatar.textContent = imageUrl ? '' : (name || 'U')[0].toUpperCase();
+        avatar.style.backgroundImage = imageUrl ? `url("${imageUrl}")` : '';
+        avatar.classList.toggle('profile-avatar-image', !!imageUrl);
+    });
+    setEl('profileDisplayName', name);
+    setEl('profileDisplayRole', { volunteer:'Volunteer', organization:'Organization', admin:'Administrator' }[user.role] || '');
+    setEl('profileDisplayBio', bio);
+    setEl('profileDisplayLocation', p.location || p.address || '—');
+    setEl('profileDisplayEmail', p.email || '—');
+    setEl('profileDisplayPhone', p.phone || '—');
+    setEl('profileDisplaySkills', p.skills || '—');
+    const parts = name.split(' ');
+    setVal('profileFirstName', parts[0] || '');
+    setVal('profileLastName', parts.slice(1).join(' ') || '');
+    setVal('profileEmail', p.email || '');
+    setVal('profilePhone', p.phone || '');
+    setVal('profileLocation', p.location || p.address || '');
+    setVal('profileBio', p.bio || p.description || '');
+    setVal('profileSkills', p.skills || '');
+}
+
+async function loadProfileData() {
     const user = typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser;
     if (!user) return;
-
     try {
         const data = await apiFetch('profile');
-        if (data.success && data.profile) {
-            const p = data.profile;
-            setEl('profileDisplayName', p.name || '');
-            setEl('profileDisplayRole', { volunteer:'Volunteer', organization:'Organization', admin:'Administrator' }[user.role] || '');
-            setEl('profileAvatar', (p.name||'U')[0].toUpperCase());
-            setEl('profileDisplayLocation', p.location || p.address || '—');
-
-            const parts = (p.name||'').split(' ');
-            setVal('profileFirstName', parts[0] || '');
-            setVal('profileLastName',  parts.slice(1).join(' ') || '');
-            setVal('profileEmail',     p.email || '');
-            setVal('profilePhone',     p.phone || '');
-            setVal('profileLocation',  p.location || p.address || '');
-            setVal('profileBio',       p.bio || p.description || '');
-            setVal('profileSkills',    p.skills || '');
-        }
+        if (data.success && data.profile) renderProfileData(data.profile, user);
     } catch { /* ignore */ }
+}
+
+async function initProfile() {
+    await loadProfileData();
 }
 
 async function handleProfileSave(e) {
@@ -777,25 +866,32 @@ async function handleProfileSave(e) {
 
     const first = document.getElementById('profileFirstName')?.value || '';
     const last  = document.getElementById('profileLastName')?.value  || '';
-    const payload = {
-        name:     `${first} ${last}`.trim(),
-        email:    document.getElementById('profileEmail')?.value    || '',
-        phone:    document.getElementById('profilePhone')?.value    || '',
-        location: document.getElementById('profileLocation')?.value || '',
-        bio:      document.getElementById('profileBio')?.value      || '',
-        skills:   document.getElementById('profileSkills')?.value   || '',
-    };
+    const image = document.getElementById('profileImage')?.files?.[0];
+    if (image && image.size > 500 * 1024) {
+        toast('Profile picture must be 500 KB or smaller.', 'error');
+        return;
+    }
+    const payload = new FormData();
+    payload.append('name', `${first} ${last}`.trim());
+    payload.append('email', document.getElementById('profileEmail')?.value || '');
+    payload.append('phone', document.getElementById('profilePhone')?.value || '');
+    payload.append('location', document.getElementById('profileLocation')?.value || '');
+    payload.append('bio', document.getElementById('profileBio')?.value || '');
+    payload.append('skills', document.getElementById('profileSkills')?.value || '');
+    if (image) payload.append('profile_image', image);
 
     try {
         const data = await apiFetch('profile_update', {}, 'POST', payload);
         if (data.success) {
+            const imageInput = document.getElementById('profileImage');
+            if (imageInput) imageInput.value = '';
             if (data.user) {
                 localStorage.setItem('vc_user', JSON.stringify(data.user));
                 if (typeof currentUser !== 'undefined') currentUser = data.user;
             }
             if (typeof updateAuthUI === 'function') updateAuthUI();
             toast('Profile updated successfully!', 'success');
-            initProfile();
+            await loadProfileData();
         } else {
             toast(data.message || 'Update failed.', 'error');
         }

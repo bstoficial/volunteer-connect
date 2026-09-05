@@ -93,6 +93,17 @@ function ensureTablesExist($conn) {
  * Add tables and columns introduced after the original database install.
  */
 function migrateApplicationTables($conn) {
+    foreach (['volunteers', 'organizations', 'admins'] as $profileTable) {
+        $columns = [];
+        $result = $conn->query("SHOW COLUMNS FROM $profileTable");
+        if ($result) {
+            while ($column = $result->fetch_assoc()) $columns[$column['Field']] = true;
+        }
+        if (!isset($columns['profile_image'])) {
+            $conn->query("ALTER TABLE $profileTable ADD COLUMN profile_image VARCHAR(255) NULL");
+        }
+    }
+
     $conn->query("CREATE TABLE IF NOT EXISTS contact_messages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(120) NOT NULL,
@@ -129,6 +140,9 @@ function migrateApplicationTables($conn) {
     }
     if (!isset($columns['spots_filled'])) {
         $conn->query("ALTER TABLE opportunities ADD COLUMN spots_filled INT NOT NULL DEFAULT 0 AFTER spots_needed");
+    }
+    if (!isset($columns['opportunity_image'])) {
+        $conn->query("ALTER TABLE opportunities ADD COLUMN opportunity_image VARCHAR(255) NULL AFTER description");
     }
 }
 

@@ -18,6 +18,60 @@ function findUserByEmail($conn, $email) {
 function emailExistsAny($conn,$email){ return findUserByEmail($conn,$email)!==null; }
 function userTable($role){ return $role==='volunteer'?'volunteers':($role==='organization'?'organizations':'admins'); }
 
+function validOpportunityLocation($location) {
+    return in_array($location, [
+        'Achham','Arghakhanchi','Baglung','Baitadi','Bajhang','Bajura','Banke','Bara','Bardiya','Bhaktapur',
+        'Bhojpur','Chitwan','Dadeldhura','Dailekh','Dang','Darchula','Dhading','Dhankuta','Dhanusha','Dolakha',
+        'Dolpa','Doti','Gorkha','Gulmi','Humla','Ilam','Jajarkot','Jhapa','Jumla','Kailali','Kalikot','Kanchanpur',
+        'Kapilvastu','Kaski','Kathmandu','Kavrepalanchok','Khotang','Lalitpur','Lamjung','Mahottari','Makwanpur',
+        'Manang','Morang','Mugu','Mustang','Myagdi','Nawalpur','Nuwakot','Okhaldhunga','Palpa','Panchthar',
+        'Parasi','Parbat','Parsa','Pyuthan','Ramechhap','Rasuwa','Rautahat','Rolpa','Rukum East','Rukum West',
+        'Rupandehi','Salyan','Sankhuwasabha','Saptari','Sarlahi','Sindhuli','Sindhupalchok','Siraha',
+        'Solukhumbu','Sunsari','Surkhet','Syangja','Tanahun','Taplejung','Tehrathum','Udayapur','Remote'
+    ], true);
+}
+
+function validOpportunityTime($time) {
+    return in_array($time, ['Morning','Afternoon','Evening','Night'], true);
+}
+
+function saveProfileImage($image, $role, $userId) {
+    if (!$image || $image['error'] !== UPLOAD_ERR_OK) return ['success'=>false,'message'=>'Please choose a valid profile picture.'];
+    if ($image['size'] > 500 * 1024) return ['success'=>false,'message'=>'Profile picture must be 500 KB or smaller.'];
+    $imageInfo=@getimagesize($image['tmp_name']);
+    $mime=$imageInfo['mime']??'';
+    $allowed=['image/jpeg'=>'jpg','image/png'=>'png','image/gif'=>'gif','image/webp'=>'webp'];
+    if (!$imageInfo || !isset($allowed[$mime])) return ['success'=>false,'message'=>'Use a valid JPEG, PNG, GIF, or WebP image.'];
+    $uploadDir=__DIR__.'/../../uploads/profile';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir,0755,true)) return ['success'=>false,'message'=>'Could not prepare image storage.'];
+    $filename=$role.'_'.(int)$userId.'.'.$allowed[$mime];
+    if (!move_uploaded_file($image['tmp_name'],$uploadDir.'/'.$filename)) return ['success'=>false,'message'=>'Could not save profile picture.'];
+    return ['success'=>true,'path'=>'uploads/profile/'.$filename];
+}
+
+function saveOpportunityImage($image, $opportunityId) {
+    if (!$image || $image['error'] !== UPLOAD_ERR_OK) return ['success'=>false,'message'=>'Please choose a valid opportunity image.'];
+    if ($image['size'] > 500 * 1024) return ['success'=>false,'message'=>'Opportunity image must be 500 KB or smaller.'];
+    $imageInfo=@getimagesize($image['tmp_name']);
+    $mime=$imageInfo['mime']??'';
+    $allowed=['image/jpeg'=>'jpg','image/png'=>'png','image/gif'=>'gif','image/webp'=>'webp'];
+    if (!$imageInfo || !isset($allowed[$mime])) return ['success'=>false,'message'=>'Use a valid JPEG, PNG, GIF, or WebP image.'];
+    $uploadDir=__DIR__.'/../../uploads/opportunities';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir,0755,true)) return ['success'=>false,'message'=>'Could not prepare image storage.'];
+    $filename='opportunity_'.(int)$opportunityId.'.'.$allowed[$mime];
+    if (!move_uploaded_file($image['tmp_name'],$uploadDir.'/'.$filename)) return ['success'=>false,'message'=>'Could not save opportunity image.'];
+    return ['success'=>true,'path'=>'uploads/opportunities/'.$filename];
+}
+
+function validateOpportunityImage($image) {
+    if (!$image || $image['error'] !== UPLOAD_ERR_OK) return 'Please choose a valid opportunity image.';
+    if ($image['size'] > 500 * 1024) return 'Opportunity image must be 500 KB or smaller.';
+    $imageInfo=@getimagesize($image['tmp_name']);
+    $allowed=['image/jpeg','image/png','image/gif','image/webp'];
+    if (!$imageInfo || !in_array($imageInfo['mime']??'', $allowed, true)) return 'Use a valid JPEG, PNG, GIF, or WebP image.';
+    return null;
+}
+
 switch ($action) {
 
 case 'session':
@@ -88,12 +142,13 @@ case 'opportunities':
     if(!empty($_GET['category'])) { $where.=' AND o.category=?'; $params[]=$_GET['category']; $types.='s'; }
     if(!empty($_GET['location'])) { $where.=' AND o.location=?'; $params[]=$_GET['location']; $types.='s'; }
     if(!empty($_GET['time'])) { $where.=' AND o.time_commitment=?'; $params[]=$_GET['time']; $types.='s'; }
-    $sql="SELECT o.*,org.name org_name FROM opportunities o JOIN organizations org ON org.id=o.organization_id WHERE $where ORDER BY o.urgent DESC,o.start_date ASC,o.created_at DESC";
+    $sql="SELECT o.*,org.name org_name,(SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id AND a.status='approved') approved_spots_filled FROM opportunities o JOIN organizations org ON org.id=o.organization_id WHERE $where ORDER BY o.urgent DESC,o.start_date ASC,o.created_at DESC";
     $stmt=$conn->prepare($sql); if($params) $stmt->bind_param($types,...$params); $stmt->execute(); $rows=$stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
     foreach($rows as &$r){
         $r['id']=(int)$r['id'];
         $r['spots']=(int)($r['spots_needed']??$r['spots']??10);
-        $r['filled']=(int)($r['spots_filled']??0);
+        $r['spots_filled']=(int)($r['approved_spots_filled']??0);
+        $r['filled']=$r['spots_filled'];
         $r['urgent']=(bool)$r['urgent'];
         $r['org']=$r['org_name'];
         $r['date']=$r['start_date'];
@@ -129,18 +184,34 @@ case 'profile':
 case 'profile_update':
     requireLogin(); $role=$_SESSION['user_role']; $name=trim($data['name']??'');$email=trim($data['email']??'');
     if($name===''||!filter_var($email,FILTER_VALIDATE_EMAIL)) jsonResponse(['success'=>false,'message'=>'Name and valid email are required.'],400);
+    $profileImagePath=null;
+    if (!empty($_FILES['profile_image'])) {
+        $imageResult=saveProfileImage($_FILES['profile_image'],$role,$_SESSION['user_id']);
+        if (!$imageResult['success']) jsonResponse($imageResult,400);
+        $profileImagePath=$imageResult['path'];
+    }
     $table=userTable($role);
     $stmt=$conn->prepare("SELECT id FROM $table WHERE email=? AND id<>?");$stmt->bind_param('si',$email,$_SESSION['user_id']);$stmt->execute();
     if($stmt->get_result()->num_rows){$stmt->close();jsonResponse(['success'=>false,'message'=>'Email is already in use.'],409);}
     $stmt->close();
     if($role==='volunteer'){
         $phone=$data['phone']??'';$loc=$data['location']??'';$bio=$data['bio']??'';$skills=$data['skills']??'';
-        $stmt=$conn->prepare("UPDATE volunteers SET name=?,email=?,phone=?,location=?,bio=?,skills=? WHERE id=?");
-        $stmt->bind_param('ssssssi',$name,$email,$phone,$loc,$bio,$skills,$_SESSION['user_id']);
+        if ($profileImagePath) {
+            $stmt=$conn->prepare("UPDATE volunteers SET name=?,email=?,phone=?,location=?,bio=?,skills=?,profile_image=? WHERE id=?");
+            $stmt->bind_param('sssssssi',$name,$email,$phone,$loc,$bio,$skills,$profileImagePath,$_SESSION['user_id']);
+        } else {
+            $stmt=$conn->prepare("UPDATE volunteers SET name=?,email=?,phone=?,location=?,bio=?,skills=? WHERE id=?");
+            $stmt->bind_param('ssssssi',$name,$email,$phone,$loc,$bio,$skills,$_SESSION['user_id']);
+        }
     } elseif($role==='organization'){
         $phone=$data['phone']??'';$addr=$data['location']??'';$bio=$data['bio']??'';
-        $stmt=$conn->prepare("UPDATE organizations SET name=?,email=?,phone=?,address=?,description=? WHERE id=?");
-        $stmt->bind_param('sssssi',$name,$email,$phone,$addr,$bio,$_SESSION['user_id']);
+        if ($profileImagePath) {
+            $stmt=$conn->prepare("UPDATE organizations SET name=?,email=?,phone=?,address=?,description=?,profile_image=? WHERE id=?");
+            $stmt->bind_param('ssssssi',$name,$email,$phone,$addr,$bio,$profileImagePath,$_SESSION['user_id']);
+        } else {
+            $stmt=$conn->prepare("UPDATE organizations SET name=?,email=?,phone=?,address=?,description=? WHERE id=?");
+            $stmt->bind_param('sssssi',$name,$email,$phone,$addr,$bio,$_SESSION['user_id']);
+        }
     } else {
         $stmt=$conn->prepare("UPDATE admins SET name=?,email=? WHERE id=?");
         $stmt->bind_param('ssi',$name,$email,$_SESSION['user_id']);
@@ -153,22 +224,34 @@ case 'profile_update':
 
 case 'org_opportunities':
     requireRole('organization');
-    $stmt=$conn->prepare("SELECT o.*, (SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id) applicant_count FROM opportunities o WHERE o.organization_id=? ORDER BY o.created_at DESC");
+    $stmt=$conn->prepare("SELECT o.*, (SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id) applicant_count, (SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id AND a.status='approved') approved_spots_filled FROM opportunities o WHERE o.organization_id=? ORDER BY o.created_at DESC");
     $stmt->bind_param('i',$_SESSION['user_id']);$stmt->execute();$rows=$stmt->get_result()->fetch_all(MYSQLI_ASSOC);$stmt->close();
-    foreach($rows as &$r){ $r['spots']=(int)($r['spots_needed']??10); $r['filled']=(int)($r['spots_filled']??0); }
+    foreach($rows as &$r){ $r['spots']=(int)($r['spots_needed']??10); $r['spots_filled']=(int)($r['approved_spots_filled']??0); $r['filled']=$r['spots_filled']; }
     jsonResponse(['success'=>true,'opportunities'=>$rows]);
 
 case 'create_opportunity':
     requireRole('organization');
     $title=trim($data['title']??'');$category=trim($data['category']??'');$loc=trim($data['location']??'');
     $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$urgent=!empty($data['urgent'])?1:0;
-    if($title===''||$category===''||$loc===''||$time===''||$spots<1||$date===''||$desc==='')
+    if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc==='')
         jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields.'],400);
+    if (!empty($_FILES['opportunity_image'])) {
+        $imageError=validateOpportunityImage($_FILES['opportunity_image']);
+        if ($imageError) jsonResponse(['success'=>false,'message'=>$imageError],400);
+    }
     $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,'active')");
     if (!$stmt) jsonResponse(['success'=>false,'message'=>'Could not prepare opportunity. Check the database schema.'],500);
     $stmt->bind_param('issssissi',$_SESSION['user_id'],$title,$category,$loc,$time,$spots,$date,$desc,$urgent);
     if(!$stmt->execute()) jsonResponse(['success'=>false,'message'=>'Could not create opportunity.'],500);
     $id=$stmt->insert_id;$stmt->close();
+    $imagePath=null;
+    if (!empty($_FILES['opportunity_image'])) {
+        $imageResult=saveOpportunityImage($_FILES['opportunity_image'],$id);
+        if (!$imageResult['success']) jsonResponse($imageResult,400);
+        $imagePath=$imageResult['path'];
+        $stmt=$conn->prepare("UPDATE opportunities SET opportunity_image=? WHERE id=?");
+        $stmt->bind_param('si',$imagePath,$id); $stmt->execute(); $stmt->close();
+    }
     audit($conn,'create_opportunity','Opportunity #'.$id.' created');
     jsonResponse(['success'=>true,'message'=>'Opportunity published successfully.','id'=>$id],201);
 
@@ -176,10 +259,22 @@ case 'update_opportunity':
     requireRole('organization');$id=(int)($data['id']??0);
     $title=trim($data['title']??'');$category=trim($data['category']??'');$loc=trim($data['location']??'');
     $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$urgent=!empty($data['urgent'])?1:0;
+    if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc==='')
+        jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields.'],400);
+    if (!empty($_FILES['opportunity_image'])) {
+        $imageError=validateOpportunityImage($_FILES['opportunity_image']);
+        if ($imageError) jsonResponse(['success'=>false,'message'=>$imageError],400);
+    }
     $stmt=$conn->prepare("UPDATE opportunities SET title=?,category=?,location=?,time_commitment=?,spots_needed=?,start_date=?,description=?,urgent=? WHERE id=? AND organization_id=?");
     $stmt->bind_param('ssssissiii',$title,$category,$loc,$time,$spots,$date,$desc,$urgent,$id,$_SESSION['user_id']);
     $stmt->execute();$ok=$stmt->affected_rows>=0;$stmt->close();
     if(!$ok) jsonResponse(['success'=>false,'message'=>'Could not update opportunity.'],500);
+    if (!empty($_FILES['opportunity_image'])) {
+        $imageResult=saveOpportunityImage($_FILES['opportunity_image'],$id);
+        if (!$imageResult['success']) jsonResponse($imageResult,400);
+        $stmt=$conn->prepare("UPDATE opportunities SET opportunity_image=? WHERE id=? AND organization_id=?");
+        $stmt->bind_param('sii',$imageResult['path'],$id,$_SESSION['user_id']); $stmt->execute(); $stmt->close();
+    }
     audit($conn,'update_opportunity','Opportunity #'.$id.' updated');
     jsonResponse(['success'=>true,'message'=>'Opportunity updated.']);
 
