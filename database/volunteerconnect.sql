@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS `opportunities` (
     `contact_phone` VARCHAR(50) NULL,
     `contact_email` VARCHAR(255) NULL,
     `urgent` TINYINT(1) DEFAULT 0,
-    `status` ENUM('active', 'closed', 'draft') DEFAULT 'active',
+    `status` ENUM('pending', 'active', 'closed', 'rejected', 'draft') DEFAULT 'pending',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

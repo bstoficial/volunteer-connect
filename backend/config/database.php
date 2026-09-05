@@ -153,6 +153,7 @@ function migrateApplicationTables($conn) {
     if (!isset($columns['contact_email'])) {
         $conn->query("ALTER TABLE opportunities ADD COLUMN contact_email VARCHAR(255) NULL AFTER contact_phone");
     }
+    $conn->query("ALTER TABLE opportunities MODIFY COLUMN status ENUM('pending','active','closed','rejected','draft') NOT NULL DEFAULT 'pending'");
 
     $conn->query("CREATE TABLE IF NOT EXISTS opportunity_reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,

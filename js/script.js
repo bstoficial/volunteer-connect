@@ -11,7 +11,7 @@ const NEPAL_DISTRICTS = [
     'Ilam', 'Jajarkot', 'Jhapa', 'Jumla', 'Kailali', 'Kalikot', 'Kanchanpur', 'Kapilvastu', 'Kaski',
     'Kathmandu', 'Kavrepalanchok', 'Khotang', 'Lalitpur', 'Lamjung', 'Mahottari', 'Makwanpur',
     'Manang', 'Morang', 'Mugu', 'Mustang', 'Myagdi', 'Nawalpur', 'Nuwakot', 'Okhaldhunga',
-    'Palpa', 'Panchthar', 'Parasi', 'Parbat', 'Parsa', 'Pyuthan', 'Ramechhap', 'Rasuwa',
+    'Palpa', 'Panchthar', 'Parasi', 'Parbat', 'Parsa', 'Pokhara', 'Pyuthan', 'Ramechhap', 'Rasuwa',
     'Rautahat', 'Rolpa', 'Rukum East', 'Rukum West', 'Rupandehi', 'Salyan', 'Sankhuwasabha',
     'Saptari', 'Sarlahi', 'Sindhuli', 'Sindhupalchok', 'Siraha', 'Solukhumbu', 'Sunsari',
     'Surkhet', 'Syangja', 'Tanahun', 'Taplejung', 'Tehrathum', 'Udayapur'
@@ -956,18 +956,56 @@ async function verifyOrg(id, status) {
 function renderAdminOppsTable(opps) {
     const tbody = document.getElementById('adminOppsTableBody');
     if (!tbody) return;
-    if (!opps.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No opportunities found.</td></tr>'; return; }
+    if (!opps.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No opportunities found.</td></tr>'; return; }
 
     tbody.innerHTML = opps.map(o => {
-        const sBadge = o.status === 'active' ? 'badge-success' : 'badge-danger';
+        const sBadge = o.status === 'active' ? 'badge-success' : o.status === 'pending' ? 'badge-warning' : 'badge-danger';
         return `<tr>
           <td><strong>${escHtml(o.title)}</strong></td>
           <td>${escHtml(o.org_name||'')}</td>
           <td><span class="badge badge-info">${escHtml(o.category)}</span></td>
           <td><span class="badge ${sBadge}">${o.status}</span></td>
           <td class="text-sm">${o.applicant_count||0} applicants</td>
+          <td><button type="button" class="btn btn-outline btn-sm" onclick="openAdminOpportunityReview(${o.id})"><i class="fas fa-eye mr-1"></i>Inspect</button>${o.status !== 'closed' && o.status !== 'rejected' ? `<button type="button" class="btn btn-sm admin-remove-btn" onclick="removeAdminOpportunity(${o.id})"><i class="fas fa-trash-alt mr-1"></i>Remove</button>` : ''}</td>
         </tr>`;
     }).join('');
+}
+
+async function openAdminOpportunityReview(id) {
+    const content = document.getElementById('adminOpportunityReviewContent');
+    if (!content) return;
+    content.innerHTML = '<div class="text-center text-muted py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading opportunity details...</div>';
+    showModal('adminOpportunityReview');
+    try {
+        const data = await apiFetch('admin_opportunity_detail', { id });
+        if (!data.success || !data.opportunity) throw new Error(data.message || 'Could not load opportunity details.');
+        const opportunity = data.opportunity;
+        const status = opportunity.status;
+        const moderationActions = status === 'pending'
+            ? `<div class="flex-row gap-3 mt-6"><button type="button" class="btn btn-primary" onclick="moderateOpportunity(${opportunity.id}, 'active')"><i class="fas fa-check mr-2"></i>Approve and Publish</button><button type="button" class="btn btn-outline" onclick="moderateOpportunity(${opportunity.id}, 'rejected')"><i class="fas fa-times mr-2"></i>Reject as Fake</button></div>`
+            : `<p class="application-status mt-6">This opportunity is already ${escHtml(status)}.</p>`;
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="mb-4"><span class="badge badge-info">${escHtml(opportunity.category)}</span><span class="badge ${status === 'pending' ? 'badge-warning' : status === 'active' ? 'badge-success' : 'badge-danger'} ml-2">${escHtml(status)}</span><h3 class="font-display text-xl font-black mt-3">${escHtml(opportunity.title)}</h3><p class="text-sm text-muted">Posted by <strong>${escHtml(opportunity.org_name)}</strong></p></div><p class="text-muted leading-relaxed mb-6">${escHtml(opportunity.description)}</p><div class="grid grid-2 gap-4 mb-6 bg-forest-light p-4 rounded-xl"><div><span class="text-xs text-muted block">Location</span><strong>${escHtml(opportunity.location)}</strong></div><div><span class="text-xs text-muted block">Time</span><strong>${escHtml(opportunity.time_commitment)}</strong></div><div><span class="text-xs text-muted block">Start Date</span><strong>${escHtml(opportunity.start_date)}</strong></div><div><span class="text-xs text-muted block">Volunteers Needed</span><strong>${escHtml(opportunity.spots_needed)}</strong></div><div><span class="text-xs text-muted block">Contact Phone</span><strong>${escHtml(opportunity.contact_phone || '—')}</strong></div><div><span class="text-xs text-muted block">Contact Email</span><strong>${escHtml(opportunity.contact_email || '—')}</strong></div></div><div class="bg-forest-light p-4 rounded-xl"><h4 class="font-bold mb-2">Organization Details</h4><p class="text-sm"><strong>${escHtml(opportunity.org_name)}</strong> · ${escHtml(opportunity.org_email || 'No email')}</p><p class="text-sm text-muted mt-1">${escHtml(opportunity.org_phone || '')} ${opportunity.org_address ? `· ${escHtml(opportunity.org_address)}` : ''}</p><p class="text-sm text-muted mt-2">${escHtml(opportunity.org_description || 'No organization description provided.')}</p></div>${opportunity.map_url ? `<a class="btn btn-outline btn-sm mt-4" href="${escHtml(opportunity.map_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marker-alt mr-1"></i>Open Google Maps</a>` : ''}${moderationActions}`;
+    } catch (error) {
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-center text-danger py-8">${escHtml(error.message)}</p>`;
+    }
+}
+
+async function moderateOpportunity(id, status) {
+    const data = await apiFetch('admin_opportunity_status', {}, 'POST', { id, status });
+    if (!data.success) { toast(data.message || 'Could not update opportunity.', 'error'); return; }
+    toast(data.message, 'success');
+    closeModal();
+    loadAdminOpportunities();
+}
+
+async function removeAdminOpportunity(id) {
+    if (!confirm('Remove this opportunity from public listings? Its applications and reviews will be preserved.')) return;
+    try {
+        const data = await apiFetch('admin_remove_opportunity', {}, 'POST', { id });
+        if (!data.success) { toast(data.message || 'Could not remove opportunity.', 'error'); return; }
+        toast(data.message, 'success');
+        loadAdminOpportunities();
+    } catch { toast('Network error. Please try again.', 'error'); }
 }
 
 // ── Profile ───────────────────────────────────────────────────

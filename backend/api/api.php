@@ -25,7 +25,7 @@ function validOpportunityLocation($location) {
         'Dolpa','Doti','Gorkha','Gulmi','Humla','Ilam','Jajarkot','Jhapa','Jumla','Kailali','Kalikot','Kanchanpur',
         'Kapilvastu','Kaski','Kathmandu','Kavrepalanchok','Khotang','Lalitpur','Lamjung','Mahottari','Makwanpur',
         'Manang','Morang','Mugu','Mustang','Myagdi','Nawalpur','Nuwakot','Okhaldhunga','Palpa','Panchthar',
-        'Parasi','Parbat','Parsa','Pyuthan','Ramechhap','Rasuwa','Rautahat','Rolpa','Rukum East','Rukum West',
+        'Parasi','Parbat','Parsa','Pokhara','Pyuthan','Ramechhap','Rasuwa','Rautahat','Rolpa','Rukum East','Rukum West',
         'Rupandehi','Salyan','Sankhuwasabha','Saptari','Sarlahi','Sindhuli','Sindhupalchok','Siraha',
         'Solukhumbu','Sunsari','Surkhet','Syangja','Tanahun','Taplejung','Tehrathum','Udayapur','Remote'
     ], true);
@@ -293,7 +293,7 @@ case 'create_opportunity':
         $imageError=validateOpportunityImage($_FILES['opportunity_image']);
         if ($imageError) jsonResponse(['success'=>false,'message'=>$imageError],400);
     }
-    $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,map_url,contact_phone,contact_email,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'active')");
+    $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,map_url,contact_phone,contact_email,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'pending')");
     if (!$stmt) jsonResponse(['success'=>false,'message'=>'Could not prepare opportunity. Check the database schema.'],500);
     $stmt->bind_param('issssisssssi',$_SESSION['user_id'],$title,$category,$loc,$time,$spots,$date,$desc,$mapUrl,$contactPhone,$contactEmail,$urgent);
     if(!$stmt->execute()) jsonResponse(['success'=>false,'message'=>'Could not create opportunity.'],500);
@@ -307,7 +307,7 @@ case 'create_opportunity':
         $stmt->bind_param('si',$imagePath,$id); $stmt->execute(); $stmt->close();
     }
     audit($conn,'create_opportunity','Opportunity #'.$id.' created');
-    jsonResponse(['success'=>true,'message'=>'Opportunity published successfully.','id'=>$id],201);
+    jsonResponse(['success'=>true,'message'=>'Opportunity submitted for admin review. It will be published after approval.','id'=>$id],201);
 
 case 'update_opportunity':
     requireRole('organization');$id=(int)($data['id']??0);
@@ -418,6 +418,35 @@ case 'admin_opportunities':
         FROM opportunities o JOIN organizations org ON org.id=o.organization_id
         ORDER BY o.created_at DESC LIMIT 100");
     jsonResponse(['success'=>true,'opportunities'=>$r->fetch_all(MYSQLI_ASSOC)]);
+
+case 'admin_opportunity_detail':
+    requireRole('admin');
+    $opportunityId=(int)($data['id']??$_GET['id']??0);
+    if(!$opportunityId) jsonResponse(['success'=>false,'message'=>'Invalid opportunity.'],400);
+    $stmt=$conn->prepare("SELECT o.*,org.name org_name,org.email org_email,org.phone org_phone,org.address org_address,org.description org_description,org.status org_status FROM opportunities o JOIN organizations org ON org.id=o.organization_id WHERE o.id=? LIMIT 1");
+    $stmt->bind_param('i',$opportunityId);$stmt->execute();$opportunity=$stmt->get_result()->fetch_assoc();$stmt->close();
+    if(!$opportunity) jsonResponse(['success'=>false,'message'=>'Opportunity not found.'],404);
+    $opportunity['applicant_count']=0;
+    $stmt=$conn->prepare("SELECT COUNT(*) applicant_count FROM applications WHERE opportunity_id=?");$stmt->bind_param('i',$opportunityId);$stmt->execute();$opportunity['applicant_count']=(int)$stmt->get_result()->fetch_assoc()['applicant_count'];$stmt->close();
+    jsonResponse(['success'=>true,'opportunity'=>$opportunity]);
+
+case 'admin_opportunity_status':
+    requireRole('admin');
+    $opportunityId=(int)($data['id']??0);$status=$data['status']??'';
+    if(!$opportunityId||!in_array($status,['active','rejected'],true)) jsonResponse(['success'=>false,'message'=>'Invalid opportunity moderation status.'],400);
+    $stmt=$conn->prepare("UPDATE opportunities SET status=? WHERE id=? AND status='pending'");$stmt->bind_param('si',$status,$opportunityId);$stmt->execute();$updated=$stmt->affected_rows;$stmt->close();
+    if(!$updated) jsonResponse(['success'=>false,'message'=>'This opportunity has already been reviewed.'],409);
+    audit($conn,'moderate_opportunity','Opportunity #'.$opportunityId.' set to '.$status);
+    jsonResponse(['success'=>true,'message'=>$status==='active'?'Opportunity approved and published.':'Opportunity rejected.']);
+
+case 'admin_remove_opportunity':
+    requireRole('admin');
+    $opportunityId=(int)($data['id']??0);
+    if(!$opportunityId) jsonResponse(['success'=>false,'message'=>'Invalid opportunity.'],400);
+    $stmt=$conn->prepare("UPDATE opportunities SET status='closed' WHERE id=? AND status<>'closed'");$stmt->bind_param('i',$opportunityId);$stmt->execute();$updated=$stmt->affected_rows;$stmt->close();
+    if(!$updated) jsonResponse(['success'=>false,'message'=>'This opportunity is already removed.'],409);
+    audit($conn,'remove_opportunity','Opportunity #'.$opportunityId.' removed by admin');
+    jsonResponse(['success'=>true,'message'=>'Opportunity removed from public listings.']);
 
 case 'admin_messages':
     requireRole('admin');

@@ -954,10 +954,11 @@
                     <th>Category</th>
                     <th>Status</th>
                     <th>Applicants</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="adminOppsTableBody">
-                  <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+                  <tr><td colspan="6" class="text-center text-muted">Loading…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1236,6 +1237,11 @@
   <!-- Completed Opportunity Review Modal -->
   <div class="modal-overlay hidden" id="modal-applicationReview" onclick="if(event.target===this)closeModal()">
     <div class="modal-content" id="applicationReviewContent"></div>
+  </div>
+
+  <!-- Admin Opportunity Review Modal -->
+  <div class="modal-overlay hidden" id="modal-adminOpportunityReview" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content" id="adminOpportunityReviewContent"></div>
   </div>
 
 </body>
