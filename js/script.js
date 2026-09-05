@@ -40,10 +40,10 @@ function populateOpportunityOptions() {
 // Application State
 let currentUser = null;
 let currentPage = 'home';
-let oppViewMode = 'grid';
 let allOpportunities = []; // cached from server
 let adminRefreshTimer = null;
 let opportunityRefreshTimer = null;
+let opportunityFilterTimer = null;
 
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -102,9 +102,6 @@ function navigateTo(page) {
     if (opportunityRefreshTimer) {
         clearInterval(opportunityRefreshTimer);
         opportunityRefreshTimer = null;
-    }
-    if (page === 'opportunities') {
-        opportunityRefreshTimer = setInterval(() => filterOpportunities(), 15000);
     }
 }
 
@@ -183,6 +180,7 @@ function renderOppCard(opp) {
         <span>${opp.filled} of ${opp.spots} spots filled</span>
         <span class="font-semibold text-primary">${opp.time || opp.time_commitment || ''}</span>
       </div>
+            ${opp.review_count ? `<div class="text-sm text-accent mb-4"><i class="fas fa-star mr-1"></i>${opp.average_rating}/5 (${opp.review_count} review${opp.review_count === 1 ? '' : 's'})</div>` : ''}
       <button class="btn btn-primary btn-sm w-full" onclick="showOppDetail(${opp.id})">View Details</button>
     </div>`;
 }
@@ -194,9 +192,14 @@ async function loadFeaturedOpportunities() {
         const data = await apiFetch('opportunities');
         if (data.success && data.opportunities) {
             allOpportunities = data.opportunities;
-            const urgent = data.opportunities.filter(o => o.urgent).slice(0, 3);
-            const display = urgent.length ? urgent : data.opportunities.slice(0, 3);
-            container.innerHTML = display.map(renderOppCard).join('');
+            const topRated = data.opportunities
+                .filter(opportunity => Number(opportunity.review_count) > 0)
+                .sort((first, second) => Number(second.average_rating || 0) - Number(first.average_rating || 0)
+                    || Number(second.review_count || 0) - Number(first.review_count || 0))
+                .slice(0, 3);
+            container.innerHTML = topRated.length
+                ? topRated.map(renderOppCard).join('')
+                : '<div class="col-span-3 text-center text-muted py-8">Top rated opportunities will appear here after volunteers submit reviews.</div>';
         }
     } catch {
         container.innerHTML = '<div class="text-muted text-center">Could not load opportunities.</div>';
@@ -207,7 +210,12 @@ async function renderOpportunities() {
     filterOpportunities();
 }
 
-async function filterOpportunities() {
+function filterOpportunities() {
+    clearTimeout(opportunityFilterTimer);
+    opportunityFilterTimer = setTimeout(loadFilteredOpportunities, 250);
+}
+
+async function loadFilteredOpportunities() {
     const search = document.getElementById('oppSearchInput')?.value.trim() || '';
     const cat    = document.getElementById('oppCategoryFilter')?.value || '';
     const loc    = document.getElementById('oppLocationFilter')?.value || '';
@@ -215,7 +223,6 @@ async function filterOpportunities() {
 
     const container = document.getElementById('opportunitiesGrid');
     const count     = document.getElementById('oppResultCount');
-    if (container) container.innerHTML = '<div class="text-center text-muted py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</div>';
 
     try {
         const params = {};
@@ -238,10 +245,22 @@ async function filterOpportunities() {
     }
 }
 
-function setOppView(mode) {
-    oppViewMode = mode;
-    document.getElementById('gridViewBtn').classList.toggle('active', mode === 'grid');
-    document.getElementById('listViewBtn').classList.toggle('active', mode === 'list');
+function updateOpportunityMapPreview() {
+    const input = document.getElementById('oppMapUrl');
+    const previewBox = document.getElementById('oppMapPreviewBox');
+    const preview = document.getElementById('oppMapPreview');
+    if (!input || !previewBox || !preview) return;
+
+    try {
+        const url = new URL(input.value.trim());
+        const allowedHosts = ['google.com', 'www.google.com', 'maps.google.com', 'maps.app.goo.gl', 'goo.gl'];
+        if (url.protocol !== 'https:' || !allowedHosts.includes(url.hostname.toLowerCase())) throw new Error('Invalid map URL');
+        preview.src = `https://www.google.com/maps?q=${encodeURIComponent(input.value.trim())}&output=embed`;
+        previewBox.classList.remove('hidden');
+    } catch {
+        preview.removeAttribute('src');
+        previewBox.classList.add('hidden');
+    }
 }
 
 function showOppDetail(id) {
@@ -249,6 +268,7 @@ function showOppDetail(id) {
     if (!opp) { toast('Opportunity not found', 'error'); return; }
 
     const content = document.getElementById('oppDetailContent');
+    const viewer = typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser;
     const spots = parseInt(opp.spots || opp.spots_needed || 0);
     const filled = parseInt(opp.filled || opp.spots_filled || 0);
     content.innerHTML = `
@@ -258,7 +278,8 @@ function showOppDetail(id) {
     </div>
     <div class="mb-4">
       <span class="badge badge-success mb-2">${escHtml(opp.category)}</span>
-      <p class="text-sm text-muted">Hosted by <strong>${escHtml(opp.org || opp.org_name || '')}</strong></p>
+    <p class="text-sm text-muted">Hosted by <button type="button" class="inline-link font-semibold" onclick="showOrganizationProfile(${opp.organization_id})">${escHtml(opp.org || opp.org_name || '')}</button></p>
+            ${opp.review_count ? `<p class="text-sm text-accent mt-2"><i class="fas fa-star mr-1"></i>${opp.average_rating}/5 from ${opp.review_count} review${opp.review_count === 1 ? '' : 's'}</p>` : '<p class="text-sm text-muted mt-2">No reviews yet</p>'}
     </div>
     <p class="text-muted leading-relaxed mb-6">${escHtml(opp.desc || opp.description || '')}</p>
     ${opp.opportunity_image ? `<a class="btn btn-outline btn-sm mb-4" href="${escHtml(new URL(opp.opportunity_image, window.location.href).href)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-image mr-1"></i>View attached image</a>` : ''}
@@ -268,10 +289,94 @@ function showOppDetail(id) {
       <div><span class="text-xs text-muted block">Start Date</span><strong>${escHtml(opp.date || opp.start_date || '')}</strong></div>
       <div><span class="text-xs text-muted block">Spots Available</span><strong>${spots - filled} left of ${spots}</strong></div>
     </div>
-    ${((typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser)?.role === 'organization')
+        ${opp.map_url ? `<a class="btn btn-outline btn-sm mb-4" href="${escHtml(opp.map_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marker-alt mr-1"></i>View exact location in Google Maps</a>` : ''}
+        ${(opp.contact_phone || opp.contact_email) ? `<div class="bg-forest-light p-4 rounded-xl mb-6"><span class="text-xs text-muted block mb-2">Contact for this opportunity</span>${opp.contact_phone ? `<a class="text-primary block mb-1" href="tel:${escHtml(opp.contact_phone)}"><i class="fas fa-phone mr-2"></i>${escHtml(opp.contact_phone)}</a>` : ''}${opp.contact_email ? `<a class="text-primary block" href="mailto:${escHtml(opp.contact_email)}"><i class="fas fa-envelope mr-2"></i>${escHtml(opp.contact_email)}</a>` : ''}</div>` : ''}
+        <div id="opportunityReviewArea" class="mb-6"></div>
+    ${viewer?.role === 'organization'
         ? '<p class="text-sm text-muted text-center">Organizations can view opportunities but cannot apply.</p>'
-        : `<button class="btn btn-primary w-full" onclick="applyToOpp(${opp.id})">Apply Now</button>`}`;
+        : viewer?.role === 'volunteer'
+            ? '<div id="opportunityActionArea"><p class="application-status text-center">Checking application status...</p></div>'
+            : `<div id="opportunityActionArea"><button class="btn btn-primary w-full" onclick="applyToOpp(${opp.id})">Apply Now</button></div>`}`;
     showModal('opportunityDetail');
+        loadReviewInfo(opp.id);
+}
+
+    async function loadReviewInfo(opportunityId) {
+        const area = document.getElementById('opportunityReviewArea');
+        const actionArea = document.getElementById('opportunityActionArea');
+        const user = typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser;
+        if (!area || !user || user.role !== 'volunteer') return;
+        try {
+            const data = await apiFetch('review_info', { opportunity_id: opportunityId });
+            if (!data.success) return;
+            if (data.application_status) {
+                const statusText = data.application_status.charAt(0).toUpperCase() + data.application_status.slice(1);
+                if (actionArea) actionArea.innerHTML = `<p class="application-status text-center"><i class="fas fa-check-circle mr-2"></i>Application ${escHtml(statusText)}</p>`;
+            } else if (actionArea) {
+                actionArea.innerHTML = `<button class="btn btn-primary w-full" onclick="applyToOpp(${opportunityId})">Apply Now</button>`;
+            }
+            if (!data.eligible) return;
+            const existing = data.review || {};
+            area.innerHTML = `<div class="review-box"><h3 class="font-bold mb-2">${existing.rating ? 'Update your review' : 'Rate this opportunity'}</h3><p class="text-sm text-muted mb-2">Choose a rating</p><div class="star-rating mb-4" role="radiogroup" aria-label="Opportunity rating">${[1,2,3,4,5].map(value => `<button type="button" class="star-btn" data-rating="${value}" aria-label="${value} star${value === 1 ? '' : 's'}" onclick="selectReviewRating(${value})"><i class="fas fa-star"></i></button>`).join('')}</div><input type="hidden" id="reviewRating" value="${existing.rating || ''}"><label class="form-label">Review <span class="text-muted">(optional)</span><textarea class="input-field" id="reviewText" rows="3" maxlength="2000" placeholder="Share your experience..."></textarea></label><button type="button" class="btn btn-outline btn-sm mt-3" onclick="submitOpportunityReview(${opportunityId})">Save Review</button></div>`;
+            if (existing.rating) selectReviewRating(existing.rating);
+            if (existing.review) document.getElementById('reviewText').value = existing.review;
+        } catch { /* Reviews are optional and should not block opportunity details. */ }
+    }
+
+    function selectReviewRating(rating) {
+        const input = document.getElementById('reviewRating');
+        if (input) input.value = rating;
+        document.querySelectorAll('.star-btn').forEach(button => {
+            button.classList.toggle('selected', Number(button.dataset.rating) <= Number(rating));
+        });
+    }
+
+    async function submitOpportunityReview(opportunityId) {
+        const rating = document.getElementById('reviewRating')?.value || '';
+        const review = document.getElementById('reviewText')?.value.trim() || '';
+        if (!rating) { toast('Please choose a rating.', 'error'); return; }
+        try {
+            const data = await apiFetch('submit_review', {}, 'POST', { opportunity_id: opportunityId, rating, review });
+            if (!data.success) { toast(data.message || 'Could not save review.', 'error'); return; }
+            toast(data.message, 'success');
+            await filterOpportunities();
+            const updated = allOpportunities.find(o => String(o.id) === String(opportunityId));
+            if (updated) showOppDetail(opportunityId);
+        } catch { toast('Network error. Please try again.', 'error'); }
+    }
+
+async function showOrganizationProfile(id) {
+        if (!id) { toast('Organization profile is unavailable.', 'error'); return; }
+        const content = document.getElementById('organizationProfileContent');
+        if (!content) return;
+        content.innerHTML = '<div class="text-center text-muted py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading organization profile...</div>';
+        showModal('organizationProfile');
+
+        try {
+                const data = await apiFetch('organization_profile', { id });
+                if (!data.success || !data.organization) throw new Error(data.message || 'Could not load organization profile.');
+                const org = data.organization;
+                const location = [org.address, org.city, org.state, org.country].filter(Boolean).join(', ');
+                const reviews = Array.isArray(org.reviews) ? org.reviews : [];
+                const image = org.profile_image ? `<img class="public-org-avatar" src="${escHtml(org.profile_image)}" alt="${escHtml(org.name)}">` : '<div class="public-org-avatar public-org-avatar-placeholder"><i class="fas fa-building"></i></div>';
+                content.innerHTML = `
+                    <div class="modal-header">
+                        <h2 class="font-display text-2xl font-black">Organization Profile</h2>
+                        <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                      <div class="public-org-header">${image}<div><h3 class="font-display text-xl font-black">${escHtml(org.name)}</h3><p class="text-muted text-sm">${escHtml(org.category || 'Community organization')}</p><p class="text-sm text-accent mt-1"><i class="fas fa-star mr-1"></i>${org.review_count ? `${org.average_rating}/5 from ${org.review_count} volunteer review${org.review_count === 1 ? '' : 's'}` : 'No volunteer ratings yet'}</p></div></div>
+                    <p class="text-muted leading-relaxed mb-6">${escHtml(org.description || 'This organization has not added a description yet.')}</p>
+                    ${reviews.length ? `<div class="public-reviews mb-6"><h3 class="font-bold mb-3">Volunteer Reviews</h3>${reviews.map(review => `<article class="public-review"><div class="flex-row items-center justify-between mb-1"><strong>${escHtml(review.volunteer_name)}</strong><span class="text-accent">${'<i class="fas fa-star"></i>'.repeat(Number(review.rating))}</span></div><p class="text-sm text-muted">${escHtml(review.review)}</p><time class="text-xs text-muted">${escHtml(fmtDate(review.created_at))}</time></article>`).join('')}</div>` : ''}
+                    <div class="grid grid-2 gap-4 mb-6 bg-forest-light p-4 rounded-xl">
+                        <div><span class="text-xs text-muted block">Active Opportunities</span><strong>${org.active_opportunities}</strong></div>
+                        ${location ? `<div><span class="text-xs text-muted block">Address</span><strong>${escHtml(location)}</strong></div>` : ''}
+                        ${org.phone ? `<div><span class="text-xs text-muted block">Phone</span><a class="text-primary" href="tel:${escHtml(org.phone)}">${escHtml(org.phone)}</a></div>` : ''}
+                        ${org.email ? `<div><span class="text-xs text-muted block">Email</span><a class="text-primary" href="mailto:${escHtml(org.email)}">${escHtml(org.email)}</a></div>` : ''}
+                    </div>
+                    ${org.website ? `<a class="btn btn-outline btn-sm" href="${escHtml(org.website)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-globe mr-1"></i>Visit organization website</a>` : ''}`;
+        } catch (error) {
+                content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Organization Profile</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-center text-danger py-8">${escHtml(error.message)}</p>`;
+        }
 }
 
 async function applyToOpp(id) {
@@ -335,7 +440,7 @@ function filterVolApps() {
 function renderVolAppsTable(apps) {
     const tbody = document.getElementById('volAppsTableBody');
     if (!tbody) return;
-    if (!apps.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No applications found.</td></tr>'; return; }
+    if (!apps.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No applications found.</td></tr>'; return; }
 
     tbody.innerHTML = apps.map(a => {
         const badge = a.status === 'approved' ? 'badge-success' : a.status === 'pending' ? 'badge-warning' : a.status === 'rejected' ? 'badge-danger' : 'badge-info';
@@ -345,14 +450,53 @@ function renderVolAppsTable(apps) {
           <td>${fmtDate(a.applied)}</td>
           <td><span class="badge ${badge}">${a.status}</span></td>
           <td><span class="text-xs text-muted">${a.location||'—'}</span></td>
+                      <td>${a.status === 'approved' ? `<button type="button" class="btn btn-outline btn-sm" onclick="openApplicationReview(${a.opp_id}, decodeURIComponent('${encodeURIComponent(a.title || 'Opportunity')}'))"><i class="fas fa-star mr-1"></i>Review</button>` : '<span class="text-xs text-muted">Available after approval</span>'}</td>
         </tr>`;
     }).join('');
+}
+
+async function openApplicationReview(opportunityId, opportunityTitle) {
+    const content = document.getElementById('applicationReviewContent');
+    if (!content) return;
+    content.innerHTML = '<div class="text-center text-muted py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading review...</div>';
+    showModal('applicationReview');
+    try {
+        const data = await apiFetch('review_info', { opportunity_id: opportunityId });
+        if (!data.success || !data.eligible) throw new Error('Reviews are available after your application is approved.');
+        const existing = data.review || {};
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Review Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-muted mb-4">${escHtml(opportunityTitle)}</p><div class="review-box"><h3 class="font-bold mb-2">Your rating</h3><div class="star-rating mb-4" role="radiogroup" aria-label="Opportunity rating">${[1,2,3,4,5].map(value => `<button type="button" class="star-btn app-star-btn" data-rating="${value}" aria-label="${value} star${value === 1 ? '' : 's'}" onclick="selectApplicationReviewRating(${value})"><i class="fas fa-star"></i></button>`).join('')}</div><input type="hidden" id="applicationReviewRating" value="${existing.rating || ''}"><label class="form-label">Review <span class="text-muted">(optional)</span><textarea class="input-field" id="applicationReviewText" rows="4" maxlength="2000" placeholder="Share your experience..."></textarea></label><button type="button" class="btn btn-primary btn-sm mt-3" onclick="submitApplicationReview(${opportunityId})">Save Review</button></div>`;
+        if (existing.rating) selectApplicationReviewRating(existing.rating);
+        if (existing.review) document.getElementById('applicationReviewText').value = existing.review;
+    } catch (error) {
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Review Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-center text-danger py-8">${escHtml(error.message)}</p>`;
+    }
+}
+
+function selectApplicationReviewRating(rating) {
+    const input = document.getElementById('applicationReviewRating');
+    if (input) input.value = rating;
+    document.querySelectorAll('.app-star-btn').forEach(button => {
+        button.classList.toggle('selected', Number(button.dataset.rating) <= Number(rating));
+    });
+}
+
+async function submitApplicationReview(opportunityId) {
+    const rating = document.getElementById('applicationReviewRating')?.value || '';
+    const review = document.getElementById('applicationReviewText')?.value.trim() || '';
+    if (!rating) { toast('Please choose a rating.', 'error'); return; }
+    try {
+        const data = await apiFetch('submit_review', {}, 'POST', { opportunity_id: opportunityId, rating, review });
+        if (!data.success) { toast(data.message || 'Could not save review.', 'error'); return; }
+        toast(data.message, 'success');
+        closeModal();
+    } catch { toast('Network error. Please try again.', 'error'); }
 }
 
 // ── Organization Dashboard ────────────────────────────────────
 async function initOrgDashboard() {
     const user = typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser;
     if (!user || user.role !== 'organization') return;
+    loadProfileData();
 
     // Stats
     try {
@@ -433,15 +577,17 @@ function renderOrgAppsTable(apps) {
 
     tbody.innerHTML = apps.map(a => {
         const badge = a.status==='approved'?'badge-success':a.status==='pending'?'badge-warning':a.status==='rejected'?'badge-danger':'badge-info';
+                const actions = a.status === 'approved'
+                        ? '<span class="badge badge-success"><i class="fas fa-check mr-1"></i>Approved</span>'
+                        : a.status === 'rejected'
+                                ? '<span class="badge badge-danger"><i class="fas fa-times mr-1"></i>Rejected</span>'
+                                : `<button class="btn btn-primary btn-sm" onclick="updateOrgApp(${a.id},'approved')">Approve</button><button class="btn btn-outline btn-sm" style="margin-left:4px;" onclick="updateOrgApp(${a.id},'rejected')">Reject</button>`;
         return `<tr>
           <td><strong>${escHtml(a.volunteer_name||'N/A')}</strong><div class="text-xs text-muted">${escHtml(a.volunteer_email||'')}</div></td>
           <td>${escHtml(a.title||'')}</td>
           <td>${fmtDate(a.applied_at)}</td>
           <td><span class="badge ${badge}">${a.status}</span></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="updateOrgApp(${a.id},'approved')">Approve</button>
-            <button class="btn btn-outline btn-sm" style="margin-left:4px;" onclick="updateOrgApp(${a.id},'rejected')">Reject</button>
-          </td>
+                    <td>${actions}</td>
         </tr>`;
     }).join('');
 }
@@ -484,6 +630,10 @@ function openEditOppModal(id) {
     document.getElementById('oppSpots').value    = opp.spots_needed || opp.spots;
     document.getElementById('oppDate').value     = opp.start_date || opp.date || '';
     document.getElementById('oppDesc').value     = opp.description || opp.desc || '';
+    document.getElementById('oppMapUrl').value   = opp.map_url || '';
+    document.getElementById('oppContactPhone').value = opp.contact_phone || '';
+    document.getElementById('oppContactEmail').value = opp.contact_email || '';
+    updateOpportunityMapPreview();
     const form = document.querySelector('#modal-createOpportunity form');
     if (form) form.dataset.editId = id;
     document.querySelector('#modal-createOpportunity h2').textContent = 'Edit Opportunity';
@@ -509,6 +659,9 @@ async function handleCreateOpportunity(e) {
     payload.append('spots', document.getElementById('oppSpots').value);
     payload.append('date', document.getElementById('oppDate').value);
     payload.append('description', document.getElementById('oppDesc').value);
+    payload.append('map_url', document.getElementById('oppMapUrl').value.trim());
+    payload.append('contact_phone', document.getElementById('oppContactPhone').value.trim());
+    payload.append('contact_email', document.getElementById('oppContactEmail').value.trim());
     if (image) payload.append('opportunity_image', image);
 
     const action = editId ? 'update_opportunity' : 'create_opportunity';
@@ -533,6 +686,7 @@ async function handleCreateOpportunity(e) {
 async function initAdminDashboard() {
     const user = typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser;
     if (!user || user.role !== 'admin') return;
+    loadProfileData();
 
     // Load stats
     await loadAdminStats();
@@ -821,21 +975,20 @@ function renderProfileData(p, user) {
     const name = p.name || '';
     const bio = p.bio || p.description || 'Add a short bio from your profile.';
     const imageUrl = p.profile_image ? new URL(p.profile_image, window.location.href).href : '';
-    const avatarIds = ['profileAvatar', 'dashboardProfileAvatar', 'avatarInitial'];
-    avatarIds.forEach(id => {
-        const avatar = document.getElementById(id);
-        if (!avatar) return;
-        avatar.textContent = imageUrl ? '' : (name || 'U')[0].toUpperCase();
-        avatar.style.backgroundImage = imageUrl ? `url("${imageUrl}")` : '';
-        avatar.classList.toggle('profile-avatar-image', !!imageUrl);
-    });
+    ['profileAvatar', 'dashboardProfileAvatar', 'avatarInitial'].forEach(id => setProfileAvatar(id, name, imageUrl));
     setEl('profileDisplayName', name);
     setEl('profileDisplayRole', { volunteer:'Volunteer', organization:'Organization', admin:'Administrator' }[user.role] || '');
     setEl('profileDisplayBio', bio);
     setEl('profileDisplayLocation', p.location || p.address || '—');
     setEl('profileDisplayEmail', p.email || '—');
     setEl('profileDisplayPhone', p.phone || '—');
-    setEl('profileDisplaySkills', p.skills || '—');
+    const ratingText = p.review_count ? `${p.average_rating}/5 from ${p.review_count} volunteer review${p.review_count === 1 ? '' : 's'}` : 'No ratings yet';
+    setEl('profileDisplayRating', ratingText);
+    document.getElementById('profileDisplayRatingItem')?.classList.toggle('hidden', user.role !== 'organization');
+    const skills = (p.skills || '').split(',').map(skill => skill.trim()).filter(Boolean);
+    setEl('profileDisplaySkills', skills.length ? skills.join(', ') : '—');
+    document.getElementById('profileDisplaySkillsItem')?.classList.toggle('hidden', user.role !== 'volunteer');
+    document.getElementById('profileSkillsField')?.classList.toggle('hidden', user.role !== 'volunteer');
     const parts = name.split(' ');
     setVal('profileFirstName', parts[0] || '');
     setVal('profileLastName', parts.slice(1).join(' ') || '');
@@ -843,7 +996,29 @@ function renderProfileData(p, user) {
     setVal('profilePhone', p.phone || '');
     setVal('profileLocation', p.location || p.address || '');
     setVal('profileBio', p.bio || p.description || '');
-    setVal('profileSkills', p.skills || '');
+    setVal('profileSkills', skills.join(', '));
+}
+
+function setProfileAvatar(id, name, imageUrl) {
+    const avatar = document.getElementById(id);
+    if (!avatar) return;
+    const initial = (name || 'U')[0].toUpperCase();
+    avatar.textContent = initial;
+    avatar.style.backgroundImage = '';
+    avatar.classList.remove('profile-avatar-image');
+    if (!imageUrl) return;
+
+    const image = new Image();
+    image.onload = () => {
+        avatar.textContent = '';
+        avatar.style.backgroundImage = `url("${imageUrl}")`;
+        avatar.classList.add('profile-avatar-image');
+    };
+    image.onerror = () => {
+        avatar.textContent = initial;
+        avatar.style.backgroundImage = '';
+    };
+    image.src = imageUrl;
 }
 
 async function loadProfileData() {

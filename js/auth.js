@@ -155,6 +155,12 @@ function updateAuthUI() {
 
     const user = getCurrentUserData() || (typeof currentUser !== 'undefined' ? currentUser : null);
 
+    const navAvatar = document.getElementById('avatarInitial');
+    if (navAvatar) {
+        navAvatar.style.backgroundImage = '';
+        navAvatar.classList.remove('profile-avatar-image');
+    }
+
     // Sync global state
     if (typeof currentUser !== 'undefined') currentUser = user;
 

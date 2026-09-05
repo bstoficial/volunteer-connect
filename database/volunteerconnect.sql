@@ -101,6 +101,9 @@ CREATE TABLE IF NOT EXISTS `opportunities` (
     `start_date` DATE NOT NULL,
     `description` TEXT NOT NULL,
     `opportunity_image` VARCHAR(255) NULL,
+    `map_url` VARCHAR(500) NULL,
+    `contact_phone` VARCHAR(50) NULL,
+    `contact_email` VARCHAR(255) NULL,
     `urgent` TINYINT(1) DEFAULT 0,
     `status` ENUM('active', 'closed', 'draft') DEFAULT 'active',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -118,6 +121,20 @@ CREATE TABLE IF NOT EXISTS `applications` (
     `applied_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`volunteer_id`) REFERENCES `volunteers`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`opportunity_id`) REFERENCES `opportunities`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `opportunity_reviews` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `opportunity_id` INT NOT NULL,
+    `organization_id` INT NOT NULL,
+    `volunteer_id` INT NOT NULL,
+    `rating` TINYINT NOT NULL,
+    `review` TEXT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `unique_opportunity_review` (`opportunity_id`, `volunteer_id`),
+    FOREIGN KEY (`opportunity_id`) REFERENCES `opportunities`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`volunteer_id`) REFERENCES `volunteers`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

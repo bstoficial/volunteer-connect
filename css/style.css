@@ -36,7 +36,7 @@
 /* Base Styles */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body { font-family: var(--font-body); background: var(--bg); color: var(--fg); overflow-x: hidden; }
+body { min-height: 100vh; display: flex; flex-direction: column; font-family: var(--font-body); background: var(--bg); color: var(--fg); overflow-x: hidden; }
 ::selection { background: rgba(46,139,87,0.2); }
 
 a { color: inherit; text-decoration: none; }
@@ -109,6 +109,7 @@ button, input, select, textarea { font-family: inherit; }
 .grid { display: grid; }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#opportunitiesGrid { min-height: 26rem; align-content: start; }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 @media (max-width: 1024px) {
@@ -121,6 +122,7 @@ button, input, select, textarea { font-family: inherit; }
 
 @media (max-width: 640px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  #opportunitiesGrid { min-height: 32rem; }
 }
 
 @media (min-width: 1025px) {
@@ -224,7 +226,7 @@ button, input, select, textarea { font-family: inherit; }
 }
 
 /* Page Sections */
-.main-content { padding-top: 64px; }
+.main-content { flex: 1; padding-top: 64px; }
 .page-section { display: none; }
 .page-section.active { display: block; }
 
@@ -360,9 +362,25 @@ button, input, select, textarea { font-family: inherit; }
 .opportunity-card-image { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem; }
 .profile-info-list { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.75rem; text-align: left; }
 .profile-info-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--muted); }
+.map-preview { margin-top: 1rem; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--forest-50); }
+.map-preview iframe { display: block; width: 100%; height: 220px; border: 0; }
+.inline-link { border: 0; padding: 0; background: transparent; color: var(--primary); cursor: pointer; font: inherit; }
+.inline-link:hover { text-decoration: underline; }
+.public-org-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+.public-org-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-200); }
+.public-org-avatar-placeholder { display: flex; align-items: center; justify-content: center; background: var(--forest-50); color: var(--primary); font-size: 1.5rem; }
+.review-box { padding: 1rem; border: 1px solid var(--forest-200); border-radius: 10px; background: var(--forest-50); }
+.public-reviews { border-top: 1px solid var(--border); padding-top: 1rem; }
+.public-review { padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+.public-review:last-child { border-bottom: 0; padding-bottom: 0; }
+.star-rating { display: flex; gap: 0.35rem; }
+.star-btn { border: 0; padding: 0; background: transparent; color: var(--forest-200); cursor: pointer; font-size: 1.5rem; }
+.star-btn:hover, .star-btn.selected { color: var(--accent); }
+.application-status { padding: 0.75rem; border-radius: 8px; background: var(--forest-50); color: var(--primary); font-weight: 600; }
 
 /* Footer */
 .footer { 
+  margin-top: auto;
   background: var(--forest-900); 
   color: rgb(255, 255, 255); 
   padding: 1.5rem 0 0.75rem; /* Reduced top and bottom padding */
@@ -370,9 +388,8 @@ button, input, select, textarea { font-family: inherit; }
 
 /* Arrange main section elements horizontally */
 .footer-grid { 
-  display: flex; 
-  flex-wrap: wrap; 
-  justify-content: space-between; 
+  display: grid; 
+  grid-template-columns: minmax(0, 1.8fr) minmax(140px, 1fr) minmax(140px, 1fr); 
   align-items: flex-start; 
   gap: 1.5rem; 
 }
@@ -416,16 +433,6 @@ button, input, select, textarea { font-family: inherit; }
   outline: none; /* Prevents visual box outline on focus */
 }
 
-.footer-input { 
-  background: var(--forest-800); 
-  border-color: var(--forest-700); 
-  color: white; 
-}
-
-.footer-input::placeholder { 
-  color: var(--forest-300); 
-}
-
 .footer-bottom { 
   border-top: 1px solid var(--forest-700); 
   padding-top: 0.75rem; 
@@ -457,7 +464,7 @@ button, input, select, textarea { font-family: inherit; }
     padding-top: 1.5rem; 
   }
   .footer-grid { 
-    flex-direction: column; 
+    grid-template-columns: 1fr; 
     gap: 1rem; 
   }
 }

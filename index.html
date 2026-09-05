@@ -260,8 +260,8 @@
         <div class="max-w-7xl container">
           <div class="flex-row items-center justify-between mb-12 flex-wrap gap-4">
             <div>
-              <span class="text-primary font-semibold text-sm uppercase tracking-wider">Featured</span>
-              <h2 class="font-display text-4xl font-black mt-2">Urgent Opportunities</h2>
+              <span class="text-primary font-semibold text-sm uppercase tracking-wider">Community Favorites</span>
+              <h2 class="font-display text-4xl font-black mt-2">Top Rated Opportunities</h2>
             </div>
             <button class="btn btn-outline btn-sm" onclick="navigateTo('opportunities')">View All <i
                 class="fas fa-arrow-right ml-1"></i></button>
@@ -433,14 +433,8 @@
         </div>
 
         <!-- Results Toolbar -->
-        <div class="flex-row items-center justify-between mb-6">
+        <div class="mb-6">
           <span class="text-muted text-sm" id="oppResultCount">Showing 0 opportunities</span>
-          <div class="view-toggle flex-row gap-2">
-            <button class="toggle-btn active" id="gridViewBtn" onclick="setOppView('grid')"><i
-                class="fas fa-th-large"></i></button>
-            <button class="toggle-btn" id="listViewBtn" onclick="setOppView('list')"><i
-                class="fas fa-list"></i></button>
-          </div>
         </div>
 
         <!-- Opportunities Display Grid -->
@@ -667,6 +661,7 @@
                   <th>Applied</th>
                   <th>Status</th>
                   <th>Location</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="volAppsTableBody">
@@ -1011,8 +1006,10 @@
                   id="profileDisplayEmail">—</span></div>
                 <div class="profile-info-item"><i class="fas fa-phone text-primary"></i><span
                   id="profileDisplayPhone">—</span></div>
-                <div class="profile-info-item"><i class="fas fa-tools text-primary"></i><span
+                <div class="profile-info-item" id="profileDisplaySkillsItem"><i class="fas fa-tools text-primary"></i><span
                   id="profileDisplaySkills">—</span></div>
+                <div class="profile-info-item hidden" id="profileDisplayRatingItem"><i class="fas fa-star text-accent"></i><span
+                  id="profileDisplayRating">No ratings yet</span></div>
             </div>
           </div>
 
@@ -1037,7 +1034,7 @@
                 <div class="mb-6"><label class="form-label" for="profileImage">Profile Picture</label><input type="file"
                   class="input-field" id="profileImage" accept="image/jpeg,image/png,image/gif,image/webp"><p
                   class="text-xs text-muted mt-2">JPEG, PNG, GIF, or WebP up to 500 KB.</p></div>
-              <div class="mb-6"><label class="form-label">Skills</label><input type="text" class="input-field"
+                <div class="mb-6" id="profileSkillsField"><label class="form-label">Skills</label><input type="text" class="input-field"
                   id="profileSkills" placeholder="e.g., Teaching, First Aid, Web Development"></div>
               <div class="flex-row gap-3">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -1081,14 +1078,6 @@
             <li><button type="button" class="footer-link" onclick="navigateTo('contact')">Contact Us</button></li>
             <li><button type="button" class="footer-link" onclick="showModal('login')">Sign In</button></li>
           </ul>
-        </div>
-        <div>
-          <h4 class="font-bold mb-4 text-white">Stay Connected</h4>
-          <p class="text-sm text-forest-300 mb-4">Get updates on new opportunities and impact stories.</p>
-          <form onsubmit="event.preventDefault();toast('Subscribed successfully','success');" class="flex-row gap-2">
-            <input type="email" class="input-field footer-input" placeholder="Email address" required>
-            <button type="submit" class="btn btn-accent btn-sm">Subscribe</button>
-          </form>
         </div>
       </div>
       <div class="footer-bottom">
@@ -1209,6 +1198,19 @@
           <div><label class="form-label">Volunteers Needed</label><input type="number" class="input-field"
               placeholder="10" min="1" required id="oppSpots"></div>
         </div>
+        <div class="mb-4"><label class="form-label" for="oppMapUrl">Exact Google Maps Location</label><input type="url"
+          class="input-field" id="oppMapUrl" placeholder="https://maps.google.com/..." oninput="updateOpportunityMapPreview()" required><p
+          class="text-xs text-muted mt-2">Open Google Maps, choose the place, select Share, and paste the link here.</p>
+          <div class="map-preview hidden" id="oppMapPreviewBox">
+            <iframe id="oppMapPreview" title="Opportunity location preview" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+        </div>
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label" for="oppContactPhone">Contact Phone <span class="text-muted">(optional)</span></label><input type="tel"
+            class="input-field" id="oppContactPhone" placeholder="+977 98XXXXXXXX"></div>
+          <div><label class="form-label" for="oppContactEmail">Contact Email <span class="text-muted">(optional)</span></label><input type="email"
+            class="input-field" id="oppContactEmail" placeholder="contact@organization.org"></div>
+        </div>
         <div class="mb-4"><label class="form-label">Start Date</label><input type="date" class="input-field" required
             id="oppDate"></div>
         <div class="mb-6"><label class="form-label">Description</label><textarea class="input-field" rows="4"
@@ -1224,6 +1226,16 @@
   <!-- Opportunity Detail Modal -->
   <div class="modal-overlay hidden" id="modal-opportunityDetail" onclick="if(event.target===this)closeModal()">
     <div class="modal-content" id="oppDetailContent"></div>
+  </div>
+
+  <!-- Public Organization Profile Modal -->
+  <div class="modal-overlay hidden" id="modal-organizationProfile" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content" id="organizationProfileContent"></div>
+  </div>
+
+  <!-- Completed Opportunity Review Modal -->
+  <div class="modal-overlay hidden" id="modal-applicationReview" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content" id="applicationReviewContent"></div>
   </div>
 
 </body>

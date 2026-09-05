@@ -35,6 +35,13 @@ function validOpportunityTime($time) {
     return in_array($time, ['Morning','Afternoon','Evening','Night'], true);
 }
 
+function validGoogleMapsUrl($url) {
+    $parts = parse_url($url);
+    $host = strtolower($parts['host'] ?? '');
+    $allowedHosts = ['google.com', 'www.google.com', 'maps.google.com', 'maps.app.goo.gl', 'goo.gl'];
+    return ($parts['scheme'] ?? '') === 'https' && in_array($host, $allowedHosts, true);
+}
+
 function saveProfileImage($image, $role, $userId) {
     if (!$image || $image['error'] !== UPLOAD_ERR_OK) return ['success'=>false,'message'=>'Please choose a valid profile picture.'];
     if ($image['size'] > 500 * 1024) return ['success'=>false,'message'=>'Profile picture must be 500 KB or smaller.'];
@@ -142,10 +149,11 @@ case 'opportunities':
     if(!empty($_GET['category'])) { $where.=' AND o.category=?'; $params[]=$_GET['category']; $types.='s'; }
     if(!empty($_GET['location'])) { $where.=' AND o.location=?'; $params[]=$_GET['location']; $types.='s'; }
     if(!empty($_GET['time'])) { $where.=' AND o.time_commitment=?'; $params[]=$_GET['time']; $types.='s'; }
-    $sql="SELECT o.*,org.name org_name,(SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id AND a.status='approved') approved_spots_filled FROM opportunities o JOIN organizations org ON org.id=o.organization_id WHERE $where ORDER BY o.urgent DESC,o.start_date ASC,o.created_at DESC";
+    $sql="SELECT o.*,org.name org_name,(SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id AND a.status='approved') approved_spots_filled,(SELECT ROUND(AVG(r.rating),1) FROM opportunity_reviews r WHERE r.opportunity_id=o.id) average_rating,(SELECT COUNT(*) FROM opportunity_reviews r WHERE r.opportunity_id=o.id) review_count FROM opportunities o JOIN organizations org ON org.id=o.organization_id WHERE $where ORDER BY o.urgent DESC,o.start_date ASC,o.created_at DESC";
     $stmt=$conn->prepare($sql); if($params) $stmt->bind_param($types,...$params); $stmt->execute(); $rows=$stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
     foreach($rows as &$r){
         $r['id']=(int)$r['id'];
+        $r['organization_id']=(int)$r['organization_id'];
         $r['spots']=(int)($r['spots_needed']??$r['spots']??10);
         $r['spots_filled']=(int)($r['approved_spots_filled']??0);
         $r['filled']=$r['spots_filled'];
@@ -156,6 +164,44 @@ case 'opportunities':
         $r['desc']=$r['description'];
     }
     jsonResponse(['success'=>true,'opportunities'=>$rows]);
+
+case 'organization_profile':
+    $organizationId=(int)($_GET['id']??0);
+    if(!$organizationId) jsonResponse(['success'=>false,'message'=>'Invalid organization.'],400);
+    $stmt=$conn->prepare("SELECT o.id,o.name,o.email,o.phone,o.address,o.city,o.state,o.country,o.website,o.description,o.category,o.profile_image,(SELECT COUNT(*) FROM opportunities op WHERE op.organization_id=o.id AND op.status='active') active_opportunities,(SELECT ROUND(AVG(r.rating),1) FROM opportunity_reviews r WHERE r.organization_id=o.id) average_rating,(SELECT COUNT(*) FROM opportunity_reviews r WHERE r.organization_id=o.id) review_count FROM organizations o WHERE o.id=? AND o.status='active' LIMIT 1");
+    $stmt->bind_param('i',$organizationId);$stmt->execute();$organization=$stmt->get_result()->fetch_assoc();$stmt->close();
+    if(!$organization) jsonResponse(['success'=>false,'message'=>'Organization profile not found.'],404);
+    $organization['id']=(int)$organization['id'];
+    $organization['active_opportunities']=(int)$organization['active_opportunities'];
+    $organization['average_rating']=$organization['average_rating'] !== null ? (float)$organization['average_rating'] : null;
+    $organization['review_count']=(int)$organization['review_count'];
+    $stmt=$conn->prepare("SELECT r.rating,r.review,r.created_at,v.name volunteer_name FROM opportunity_reviews r JOIN volunteers v ON v.id=r.volunteer_id WHERE r.organization_id=? AND r.review IS NOT NULL AND r.review<>'' ORDER BY r.created_at DESC LIMIT 20");
+    $stmt->bind_param('i',$organizationId);$stmt->execute();$organization['reviews']=$stmt->get_result()->fetch_all(MYSQLI_ASSOC);$stmt->close();
+    jsonResponse(['success'=>true,'organization'=>$organization]);
+
+case 'review_info':
+    requireRole('volunteer');
+    $opportunityId=(int)($data['opportunity_id']??$_GET['opportunity_id']??0);
+    if(!$opportunityId) jsonResponse(['success'=>false,'message'=>'Invalid opportunity.'],400);
+    $stmt=$conn->prepare("SELECT status FROM applications WHERE opportunity_id=? AND volunteer_id=? LIMIT 1");
+    $stmt->bind_param('ii',$opportunityId,$_SESSION['user_id']);$stmt->execute();$application=$stmt->get_result()->fetch_assoc();$stmt->close();
+    $eligible=($application['status']??'')==='approved';
+    $stmt=$conn->prepare("SELECT rating,review FROM opportunity_reviews WHERE opportunity_id=? AND volunteer_id=? LIMIT 1");
+    $stmt->bind_param('ii',$opportunityId,$_SESSION['user_id']);$stmt->execute();$existing=$stmt->get_result()->fetch_assoc();$stmt->close();
+    jsonResponse(['success'=>true,'application_status'=>$application['status']??null,'eligible'=>$eligible,'review'=>$existing ?: null]);
+
+case 'submit_review':
+    requireRole('volunteer');
+    $opportunityId=(int)($data['opportunity_id']??0);$rating=(int)($data['rating']??0);$review=trim($data['review']??'');
+    if(!$opportunityId||$rating<1||$rating>5||strlen($review)>2000) jsonResponse(['success'=>false,'message'=>'Choose a rating from 1 to 5 and keep the review under 2000 characters.'],400);
+    $stmt=$conn->prepare("SELECT o.organization_id FROM opportunities o JOIN applications a ON a.opportunity_id=o.id WHERE o.id=? AND a.volunteer_id=? AND a.status='approved' LIMIT 1");
+    $stmt->bind_param('ii',$opportunityId,$_SESSION['user_id']);$stmt->execute();$opportunity=$stmt->get_result()->fetch_assoc();$stmt->close();
+    if(!$opportunity) jsonResponse(['success'=>false,'message'=>'Only approved volunteers can review this opportunity.'],403);
+    $stmt=$conn->prepare("INSERT INTO opportunity_reviews(opportunity_id,organization_id,volunteer_id,rating,review) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE rating=VALUES(rating),review=VALUES(review)");
+    $stmt->bind_param('iiiis',$opportunityId,$opportunity['organization_id'],$_SESSION['user_id'],$rating,$review);
+    if(!$stmt->execute()) { $stmt->close(); jsonResponse(['success'=>false,'message'=>'Could not save your review.'],500); }
+    $stmt->close();
+    jsonResponse(['success'=>true,'message'=>'Your review was saved.']);
 
 case 'apply':
     requireRole('volunteer'); $opp=(int)($data['opportunity_id']??0); if(!$opp) jsonResponse(['success'=>false,'message'=>'Invalid opportunity.'],400);
@@ -179,6 +225,12 @@ case 'profile':
     requireLogin(); $role=$_SESSION['user_role']; $table=userTable($role);
     $stmt=$conn->prepare("SELECT * FROM $table WHERE id=?");$stmt->bind_param('i',$_SESSION['user_id']);$stmt->execute();$u=$stmt->get_result()->fetch_assoc();$stmt->close();
     unset($u['password']);
+    if ($role === 'organization') {
+        $stmt=$conn->prepare("SELECT ROUND(AVG(rating),1) average_rating,COUNT(*) review_count FROM opportunity_reviews WHERE organization_id=?");
+        $stmt->bind_param('i',$_SESSION['user_id']);$stmt->execute();$rating=$stmt->get_result()->fetch_assoc();$stmt->close();
+        $u['average_rating']=$rating['average_rating'] !== null ? (float)$rating['average_rating'] : null;
+        $u['review_count']=(int)$rating['review_count'];
+    }
     jsonResponse(['success'=>true,'profile'=>$u]);
 
 case 'profile_update':
@@ -195,7 +247,8 @@ case 'profile_update':
     if($stmt->get_result()->num_rows){$stmt->close();jsonResponse(['success'=>false,'message'=>'Email is already in use.'],409);}
     $stmt->close();
     if($role==='volunteer'){
-        $phone=$data['phone']??'';$loc=$data['location']??'';$bio=$data['bio']??'';$skills=$data['skills']??'';
+        $phone=trim($data['phone']??'');$loc=trim($data['location']??'');$bio=trim($data['bio']??'');$skills=trim($data['skills']??'');
+        if(strlen($skills)>1000) jsonResponse(['success'=>false,'message'=>'Skills must be 1000 characters or fewer.'],400);
         if ($profileImagePath) {
             $stmt=$conn->prepare("UPDATE volunteers SET name=?,email=?,phone=?,location=?,bio=?,skills=?,profile_image=? WHERE id=?");
             $stmt->bind_param('sssssssi',$name,$email,$phone,$loc,$bio,$skills,$profileImagePath,$_SESSION['user_id']);
@@ -232,16 +285,17 @@ case 'org_opportunities':
 case 'create_opportunity':
     requireRole('organization');
     $title=trim($data['title']??'');$category=trim($data['category']??'');$loc=trim($data['location']??'');
-    $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$urgent=!empty($data['urgent'])?1:0;
-    if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc==='')
-        jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields.'],400);
+    $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$mapUrl=trim($data['map_url']??'');$contactPhone=trim($data['contact_phone']??'');$contactEmail=trim($data['contact_email']??'');$urgent=!empty($data['urgent'])?1:0;
+    if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc===''||!validGoogleMapsUrl($mapUrl))
+        jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields and provide a valid Google Maps link.'],400);
+    if($contactEmail!==''&&!filter_var($contactEmail,FILTER_VALIDATE_EMAIL)) jsonResponse(['success'=>false,'message'=>'Please provide a valid contact email.'],400);
     if (!empty($_FILES['opportunity_image'])) {
         $imageError=validateOpportunityImage($_FILES['opportunity_image']);
         if ($imageError) jsonResponse(['success'=>false,'message'=>$imageError],400);
     }
-    $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,'active')");
+    $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,map_url,contact_phone,contact_email,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'active')");
     if (!$stmt) jsonResponse(['success'=>false,'message'=>'Could not prepare opportunity. Check the database schema.'],500);
-    $stmt->bind_param('issssissi',$_SESSION['user_id'],$title,$category,$loc,$time,$spots,$date,$desc,$urgent);
+    $stmt->bind_param('issssisssssi',$_SESSION['user_id'],$title,$category,$loc,$time,$spots,$date,$desc,$mapUrl,$contactPhone,$contactEmail,$urgent);
     if(!$stmt->execute()) jsonResponse(['success'=>false,'message'=>'Could not create opportunity.'],500);
     $id=$stmt->insert_id;$stmt->close();
     $imagePath=null;
@@ -258,15 +312,16 @@ case 'create_opportunity':
 case 'update_opportunity':
     requireRole('organization');$id=(int)($data['id']??0);
     $title=trim($data['title']??'');$category=trim($data['category']??'');$loc=trim($data['location']??'');
-    $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$urgent=!empty($data['urgent'])?1:0;
-    if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc==='')
-        jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields.'],400);
+    $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$mapUrl=trim($data['map_url']??'');$contactPhone=trim($data['contact_phone']??'');$contactEmail=trim($data['contact_email']??'');$urgent=!empty($data['urgent'])?1:0;
+    if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc===''||!validGoogleMapsUrl($mapUrl))
+        jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields and provide a valid Google Maps link.'],400);
+    if($contactEmail!==''&&!filter_var($contactEmail,FILTER_VALIDATE_EMAIL)) jsonResponse(['success'=>false,'message'=>'Please provide a valid contact email.'],400);
     if (!empty($_FILES['opportunity_image'])) {
         $imageError=validateOpportunityImage($_FILES['opportunity_image']);
         if ($imageError) jsonResponse(['success'=>false,'message'=>$imageError],400);
     }
-    $stmt=$conn->prepare("UPDATE opportunities SET title=?,category=?,location=?,time_commitment=?,spots_needed=?,start_date=?,description=?,urgent=? WHERE id=? AND organization_id=?");
-    $stmt->bind_param('ssssissiii',$title,$category,$loc,$time,$spots,$date,$desc,$urgent,$id,$_SESSION['user_id']);
+    $stmt=$conn->prepare("UPDATE opportunities SET title=?,category=?,location=?,time_commitment=?,spots_needed=?,start_date=?,description=?,map_url=?,contact_phone=?,contact_email=?,urgent=? WHERE id=? AND organization_id=?");
+    $stmt->bind_param('ssssisssssiii',$title,$category,$loc,$time,$spots,$date,$desc,$mapUrl,$contactPhone,$contactEmail,$urgent,$id,$_SESSION['user_id']);
     $stmt->execute();$ok=$stmt->affected_rows>=0;$stmt->close();
     if(!$ok) jsonResponse(['success'=>false,'message'=>'Could not update opportunity.'],500);
     if (!empty($_FILES['opportunity_image'])) {

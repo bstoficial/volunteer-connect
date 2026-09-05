@@ -144,6 +144,29 @@ function migrateApplicationTables($conn) {
     if (!isset($columns['opportunity_image'])) {
         $conn->query("ALTER TABLE opportunities ADD COLUMN opportunity_image VARCHAR(255) NULL AFTER description");
     }
+    if (!isset($columns['map_url'])) {
+        $conn->query("ALTER TABLE opportunities ADD COLUMN map_url VARCHAR(500) NULL AFTER opportunity_image");
+    }
+    if (!isset($columns['contact_phone'])) {
+        $conn->query("ALTER TABLE opportunities ADD COLUMN contact_phone VARCHAR(50) NULL AFTER map_url");
+    }
+    if (!isset($columns['contact_email'])) {
+        $conn->query("ALTER TABLE opportunities ADD COLUMN contact_email VARCHAR(255) NULL AFTER contact_phone");
+    }
+
+    $conn->query("CREATE TABLE IF NOT EXISTS opportunity_reviews (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        opportunity_id INT NOT NULL,
+        organization_id INT NOT NULL,
+        volunteer_id INT NOT NULL,
+        rating TINYINT NOT NULL,
+        review TEXT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_opportunity_review (opportunity_id, volunteer_id),
+        FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE CASCADE,
+        FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+        FOREIGN KEY (volunteer_id) REFERENCES volunteers(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
 
 /**
