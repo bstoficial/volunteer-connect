@@ -35,6 +35,15 @@ function validOpportunityTime($time) {
     return in_array($time, ['Morning','Afternoon','Evening','Night'], true);
 }
 
+function validOpportunityDate($date) {
+    $parsed = DateTime::createFromFormat('!Y-m-d', $date);
+    $errors = DateTime::getLastErrors();
+    return $parsed
+        && (!$errors || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))
+        && $parsed->format('Y-m-d') === $date
+        && $date >= date('Y-m-d');
+}
+
 function validGoogleMapsUrl($url) {
     $parts = parse_url($url);
     $host = strtolower($parts['host'] ?? '');
@@ -288,12 +297,13 @@ case 'create_opportunity':
     $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$mapUrl=trim($data['map_url']??'');$contactPhone=trim($data['contact_phone']??'');$contactEmail=trim($data['contact_email']??'');$urgent=!empty($data['urgent'])?1:0;
     if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc===''||!validGoogleMapsUrl($mapUrl))
         jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields and provide a valid Google Maps link.'],400);
+    if (!validOpportunityDate($date)) jsonResponse(['success'=>false,'message'=>'Start date must be today or a future date.'],400);
     if($contactEmail!==''&&!filter_var($contactEmail,FILTER_VALIDATE_EMAIL)) jsonResponse(['success'=>false,'message'=>'Please provide a valid contact email.'],400);
     if (!empty($_FILES['opportunity_image'])) {
         $imageError=validateOpportunityImage($_FILES['opportunity_image']);
         if ($imageError) jsonResponse(['success'=>false,'message'=>$imageError],400);
     }
-    $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,map_url,contact_phone,contact_email,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'pending')");
+    $stmt=$conn->prepare("INSERT INTO opportunities(organization_id,title,category,location,time_commitment,spots_needed,start_date,description,map_url,contact_phone,contact_email,urgent,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'active')");
     if (!$stmt) jsonResponse(['success'=>false,'message'=>'Could not prepare opportunity. Check the database schema.'],500);
     $stmt->bind_param('issssisssssi',$_SESSION['user_id'],$title,$category,$loc,$time,$spots,$date,$desc,$mapUrl,$contactPhone,$contactEmail,$urgent);
     if(!$stmt->execute()) jsonResponse(['success'=>false,'message'=>'Could not create opportunity.'],500);
@@ -307,7 +317,7 @@ case 'create_opportunity':
         $stmt->bind_param('si',$imagePath,$id); $stmt->execute(); $stmt->close();
     }
     audit($conn,'create_opportunity','Opportunity #'.$id.' created');
-    jsonResponse(['success'=>true,'message'=>'Opportunity submitted for admin review. It will be published after approval.','id'=>$id],201);
+    jsonResponse(['success'=>true,'message'=>'Opportunity published successfully.','id'=>$id],201);
 
 case 'update_opportunity':
     requireRole('organization');$id=(int)($data['id']??0);
@@ -315,6 +325,7 @@ case 'update_opportunity':
     $time=trim($data['time']??'');$spots=(int)($data['spots']??0);$date=$data['date']??'';$desc=trim($data['description']??'');$mapUrl=trim($data['map_url']??'');$contactPhone=trim($data['contact_phone']??'');$contactEmail=trim($data['contact_email']??'');$urgent=!empty($data['urgent'])?1:0;
     if($title===''||$category===''||!validOpportunityLocation($loc)||!validOpportunityTime($time)||$spots<1||$date===''||$desc===''||!validGoogleMapsUrl($mapUrl))
         jsonResponse(['success'=>false,'message'=>'Please complete all opportunity fields and provide a valid Google Maps link.'],400);
+    if (!validOpportunityDate($date)) jsonResponse(['success'=>false,'message'=>'Start date must be today or a future date.'],400);
     if($contactEmail!==''&&!filter_var($contactEmail,FILTER_VALIDATE_EMAIL)) jsonResponse(['success'=>false,'message'=>'Please provide a valid contact email.'],400);
     if (!empty($_FILES['opportunity_image'])) {
         $imageError=validateOpportunityImage($_FILES['opportunity_image']);
@@ -413,7 +424,7 @@ case 'admin_verify_org':
 
 case 'admin_opportunities':
     requireRole('admin');
-    $r=$conn->query("SELECT o.id,o.title,o.category,o.location,o.status,o.created_at,o.spots_needed,o.urgent,org.name org_name,
+    $r=$conn->query("SELECT o.id,o.organization_id,o.title,o.category,o.location,o.status,o.created_at,o.spots_needed,o.urgent,o.opportunity_image,org.name org_name,
         (SELECT COUNT(*) FROM applications a WHERE a.opportunity_id=o.id) applicant_count
         FROM opportunities o JOIN organizations org ON org.id=o.organization_id
         ORDER BY o.created_at DESC LIMIT 100");

@@ -37,6 +37,15 @@ function populateOpportunityOptions() {
     if (timeInput) timeInput.innerHTML = timeOptions;
 }
 
+function setOpportunityDateMinimum() {
+    const dateInput = document.getElementById('oppDate');
+    if (!dateInput) return;
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    dateInput.min = `${today.getFullYear()}-${month}-${day}`;
+}
+
 // Application State
 let currentUser = null;
 let currentPage = 'home';
@@ -48,6 +57,7 @@ let opportunityFilterTimer = null;
 // ── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     populateOpportunityOptions();
+    setOpportunityDateMinimum();
     animateCounterNumbers();
     loadFeaturedOpportunities();
 });
@@ -622,6 +632,7 @@ async function closeOpp(id) {
 function openEditOppModal(id) {
     const opp = _orgOpps.find(o => String(o.id) === String(id));
     if (!opp) return;
+    setOpportunityDateMinimum();
     // Populate modal and set edit mode
     document.getElementById('oppTitle').value    = opp.title;
     document.getElementById('oppCategory').value = opp.category;
@@ -644,7 +655,13 @@ function openEditOppModal(id) {
 async function handleCreateOpportunity(e) {
     e.preventDefault();
     const form    = e.target;
+    const dateInput = document.getElementById('oppDate');
     const editId  = form.dataset.editId;
+    setOpportunityDateMinimum();
+    if (!dateInput.checkValidity()) {
+        dateInput.reportValidity();
+        return;
+    }
     const image = document.getElementById('oppImage')?.files?.[0];
     if (image && image.size > 500 * 1024) {
         toast('Opportunity image must be 500 KB or smaller.', 'error');
@@ -984,7 +1001,16 @@ async function openAdminOpportunityReview(id) {
         const moderationActions = status === 'pending'
             ? `<div class="flex-row gap-3 mt-6"><button type="button" class="btn btn-primary" onclick="moderateOpportunity(${opportunity.id}, 'active')"><i class="fas fa-check mr-2"></i>Approve and Publish</button><button type="button" class="btn btn-outline" onclick="moderateOpportunity(${opportunity.id}, 'rejected')"><i class="fas fa-times mr-2"></i>Reject as Fake</button></div>`
             : `<p class="application-status mt-6">This opportunity is already ${escHtml(status)}.</p>`;
-        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="mb-4"><span class="badge badge-info">${escHtml(opportunity.category)}</span><span class="badge ${status === 'pending' ? 'badge-warning' : status === 'active' ? 'badge-success' : 'badge-danger'} ml-2">${escHtml(status)}</span><h3 class="font-display text-xl font-black mt-3">${escHtml(opportunity.title)}</h3><p class="text-sm text-muted">Posted by <strong>${escHtml(opportunity.org_name)}</strong></p></div><p class="text-muted leading-relaxed mb-6">${escHtml(opportunity.description)}</p><div class="grid grid-2 gap-4 mb-6 bg-forest-light p-4 rounded-xl"><div><span class="text-xs text-muted block">Location</span><strong>${escHtml(opportunity.location)}</strong></div><div><span class="text-xs text-muted block">Time</span><strong>${escHtml(opportunity.time_commitment)}</strong></div><div><span class="text-xs text-muted block">Start Date</span><strong>${escHtml(opportunity.start_date)}</strong></div><div><span class="text-xs text-muted block">Volunteers Needed</span><strong>${escHtml(opportunity.spots_needed)}</strong></div><div><span class="text-xs text-muted block">Contact Phone</span><strong>${escHtml(opportunity.contact_phone || '—')}</strong></div><div><span class="text-xs text-muted block">Contact Email</span><strong>${escHtml(opportunity.contact_email || '—')}</strong></div></div><div class="bg-forest-light p-4 rounded-xl"><h4 class="font-bold mb-2">Organization Details</h4><p class="text-sm"><strong>${escHtml(opportunity.org_name)}</strong> · ${escHtml(opportunity.org_email || 'No email')}</p><p class="text-sm text-muted mt-1">${escHtml(opportunity.org_phone || '')} ${opportunity.org_address ? `· ${escHtml(opportunity.org_address)}` : ''}</p><p class="text-sm text-muted mt-2">${escHtml(opportunity.org_description || 'No organization description provided.')}</p></div>${opportunity.map_url ? `<a class="btn btn-outline btn-sm mt-4" href="${escHtml(opportunity.map_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marker-alt mr-1"></i>Open Google Maps</a>` : ''}${moderationActions}`;
+        const imagePath = opportunity.opportunity_image || opportunity.image_url || '';
+        const imageUrl = imagePath ? new URL(imagePath, window.location.href).href : '';
+        const imageLink = imageUrl
+            ? `<div class="mb-6"><a class="btn btn-outline btn-sm" href="${escHtml(imageUrl)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-image mr-1"></i>View attached image</a></div>`
+            : '<p class="text-sm text-muted mb-6"><i class="fas fa-image mr-1"></i>No attached image</p>';
+        const organizationLink = opportunity.organization_id
+            ? `<button type="button" class="inline-link font-semibold mt-2" onclick="showOrganizationProfile(${opportunity.organization_id})"><i class="fas fa-building mr-1"></i>View organization profile</button>`
+            : '';
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="mb-4"><span class="badge badge-info">${escHtml(opportunity.category)}</span><span class="badge ${status === 'pending' ? 'badge-warning' : status === 'active' ? 'badge-success' : 'badge-danger'} ml-2">${escHtml(status)}</span><h3 class="font-display text-xl font-black mt-3">${escHtml(opportunity.title)}</h3><p class="text-sm text-muted">Posted by <strong>${escHtml(opportunity.org_name)}</strong></p>${organizationLink}</div>${imageLink}<p class="text-muted leading-relaxed mb-6">${escHtml(opportunity.description)}</p><div class="grid grid-2 gap-4 mb-6 bg-forest-light p-4 rounded-xl"><div><span class="text-xs text-muted block">Location</span><strong>${escHtml(opportunity.location)}</strong></div><div><span class="text-xs text-muted block">Time</span><strong>${escHtml(opportunity.time_commitment)}</strong></div><div><span class="text-xs text-muted block">Start Date</span><strong>${escHtml(opportunity.start_date)}</strong></div><div><span class="text-xs text-muted block">Volunteers Needed</span><strong>${escHtml(opportunity.spots_needed)}</strong></div><div><span class="text-xs text-muted block">Contact Phone</span><strong>${escHtml(opportunity.contact_phone || '—')}</strong></div><div><span class="text-xs text-muted block">Contact Email</span><strong>${escHtml(opportunity.contact_email || '—')}</strong></div></div><div class="bg-forest-light p-4 rounded-xl"><h4 class="font-bold mb-2">Organization Details</h4><p class="text-sm"><strong>${escHtml(opportunity.org_name)}</strong> · ${escHtml(opportunity.org_email || 'No email')}</p><p class="text-sm text-muted mt-1">${escHtml(opportunity.org_phone || '')} ${opportunity.org_address ? `· ${escHtml(opportunity.org_address)}` : ''}</p><p class="text-sm text-muted mt-2">${escHtml(opportunity.org_description || 'No organization description provided.')}</p></div>${opportunity.map_url ? ` <a class="btn btn-outline btn-sm mt-4" href="${escHtml(opportunity.map_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marker-alt mr-1"></i>Open Google Maps</a>` : ''}${moderationActions}`;
+        content.querySelectorAll('.bg-forest-light').item(1)?.remove();
     } catch (error) {
         content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Opportunity</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-center text-danger py-8">${escHtml(error.message)}</p>`;
     }
