@@ -397,6 +397,22 @@ case 'admin_toggle_user':
     audit($conn,'manage_user','User '.$role.' #'.$id.' set to '.$status);
     jsonResponse(['success'=>true,'message'=>'User status updated.']);
 
+case 'admin_reset_password':
+    requireRole('admin');
+    $role=$data['role']??''; $id=(int)($data['id']??0); $newPassword=(string)($data['password']??'');
+    if(!in_array($role,['volunteer','organization','admin'],true)||$id<1||strlen($newPassword)<8)
+        jsonResponse(['success'=>false,'message'=>'Choose a password with at least 8 characters.'],400);
+    if($role==='admin' && $id===(int)$_SESSION['user_id'])
+        jsonResponse(['success'=>false,'message'=>'Use your profile settings to change your own password.'],400);
+    $table=userTable($role);
+    $passwordHash=password_hash($newPassword,PASSWORD_DEFAULT);
+    $stmt=$conn->prepare("UPDATE $table SET password=?, reset_token=NULL, reset_token_expires_at=NULL WHERE id=?");
+    if(!$stmt) jsonResponse(['success'=>false,'message'=>'Could not prepare password change.'],500);
+    $stmt->bind_param('si',$passwordHash,$id); $stmt->execute(); $updated=$stmt->affected_rows; $stmt->close();
+    if($updated!==1) jsonResponse(['success'=>false,'message'=>'Account not found or password was unchanged.'],404);
+    audit($conn,'admin_reset_password','Password changed for '.$role.' #'.$id);
+    jsonResponse(['success'=>true,'message'=>'Password changed. Give the temporary password to the verified account owner securely.']);
+
 case 'admin_orgs':
     requireRole('admin');
     $r=$conn->query("SELECT o.id,o.name,o.email,o.phone,o.category,o.status,o.created_at,
@@ -464,7 +480,7 @@ case 'admin_messages':
     if(!empty($_GET['mark_read'])) {
         $conn->query("UPDATE contact_messages SET status='read' WHERE status='unread'");
     }
-    $r=$conn->query("SELECT id,name,email,subject,message,status,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 200");
+    $r=$conn->query("SELECT id,name,email,subject,message,status,review_status,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 200");
     if(!$r) jsonResponse(['success'=>false,'message'=>'Could not load contact messages.'],500);
     $messages=$r->fetch_all(MYSQLI_ASSOC);
     $unread=0;
@@ -481,6 +497,32 @@ case 'admin_message_status':
     $stmt->bind_param('si',$status,$id); $stmt->execute(); $updated=$stmt->affected_rows; $stmt->close();
     if($updated<0) jsonResponse(['success'=>false,'message'=>'Could not update message status.'],500);
     jsonResponse(['success'=>true,'message'=>'Message marked as '.$status.'.']);
+
+case 'admin_verify_password_request':
+    requireRole('admin');
+    $email=trim((string)($data['email']??''));
+    if(!filter_var($email,FILTER_VALIDATE_EMAIL))
+        jsonResponse(['success'=>false,'message'=>'The request does not contain a valid email address.'],400);
+    $account=findUserByEmail($conn,$email);
+    if(!$account)
+        jsonResponse(['success'=>false,'message'=>'No registered account matches this email. Treat the request as invalid.'],404);
+    jsonResponse([
+        'success'=>true,
+        'message'=>'Account found. Verify the requester through a trusted channel before changing the password.',
+        'account'=>['id'=>(int)$account['id'],'name'=>$account['name'],'email'=>$account['email'],'role'=>$account['role']]
+    ]);
+
+case 'admin_message_review':
+    requireRole('admin');
+    $id=(int)($data['id']??0); $reviewStatus=$data['review_status']??'';
+    if(!$id || !in_array($reviewStatus,['pending','verified','fraud'],true))
+        jsonResponse(['success'=>false,'message'=>'Invalid message review status.'],400);
+    $stmt=$conn->prepare("UPDATE contact_messages SET review_status=?, status='read' WHERE id=?");
+    if(!$stmt) jsonResponse(['success'=>false,'message'=>'Could not review this message.'],500);
+    $stmt->bind_param('si',$reviewStatus,$id); $stmt->execute(); $updated=$stmt->affected_rows; $stmt->close();
+    if($updated<0) jsonResponse(['success'=>false,'message'=>'Could not review this message.'],500);
+    audit($conn,'review_password_request','Message #'.$id.' marked '.$reviewStatus);
+    jsonResponse(['success'=>true,'message'=>'Message marked as '.$reviewStatus.'.']);
 
 case 'stats':
     requireLogin();

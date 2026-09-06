@@ -102,6 +102,12 @@ function migrateApplicationTables($conn) {
         if (!isset($columns['profile_image'])) {
             $conn->query("ALTER TABLE $profileTable ADD COLUMN profile_image VARCHAR(255) NULL");
         }
+        if (!isset($columns['reset_token'])) {
+            $conn->query("ALTER TABLE $profileTable ADD COLUMN reset_token CHAR(64) NULL");
+        }
+        if (!isset($columns['reset_token_expires_at'])) {
+            $conn->query("ALTER TABLE $profileTable ADD COLUMN reset_token_expires_at TIMESTAMP NULL");
+        }
     }
 
     $conn->query("CREATE TABLE IF NOT EXISTS contact_messages (
@@ -111,10 +117,12 @@ function migrateApplicationTables($conn) {
         subject VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
         status ENUM('unread','read') NOT NULL DEFAULT 'unread',
+        review_status ENUM('pending','verified','fraud') NOT NULL DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_contact_messages_status (status),
         INDEX idx_contact_messages_created_at (created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $conn->query("ALTER TABLE contact_messages ADD COLUMN review_status ENUM('pending','verified','fraud') NOT NULL DEFAULT 'pending'");
 
     $opportunities = $conn->query("SHOW TABLES LIKE 'opportunities'");
     if (!$opportunities || $opportunities->num_rows === 0) {

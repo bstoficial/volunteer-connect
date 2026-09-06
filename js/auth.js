@@ -117,6 +117,15 @@ async function handleRegister(event) {
     }
 }
 
+function contactAdmin() {
+    closeModal();
+    navigateTo('contact');
+    const subject = document.getElementById('contactSubject');
+    const message = document.getElementById('contactMessage');
+    if (subject) subject.value = 'Password reset request';
+    if (message) message.value = 'I need help changing my VolunteerConnect password. Please verify my identity and contact me with the next steps.';
+}
+
 /* ── Logout ──────────────────────────────────────────────── */
 async function logout() {
     try { await apiCall('logout'); } catch { /* ignore */ }

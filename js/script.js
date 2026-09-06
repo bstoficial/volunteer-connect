@@ -825,12 +825,61 @@ function renderAdminMessagesTable(messages, unread) {
       <td class="text-sm" style="max-width:420px;white-space:normal;">${escHtml(m.message)}</td>
       <td>${fmtDate(m.created_at)}</td>
             <td>
-                <span class="badge ${m.status === 'unread' ? 'badge-warning' : 'badge-success'}">${m.status}</span>
-                <button type="button" class="btn btn-sm btn-outline" style="margin-left:6px;padding:3px 8px;font-size:11px;" onclick="updateAdminMessageStatus(${m.id},'${m.status === 'unread' ? 'read' : 'unread'}')">
+                <div style="margin-bottom:8px;"><span class="badge ${m.review_status === 'verified' ? 'badge-success' : m.review_status === 'fraud' ? 'badge-danger' : m.status === 'unread' ? 'badge-warning' : 'badge-info'}">${m.review_status || m.status}</span></div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:11px;white-space:nowrap;" onclick="updateAdminMessageStatus(${m.id},'${m.status === 'unread' ? 'read' : 'unread'}')">
                     Mark ${m.status === 'unread' ? 'read' : 'unread'}
                 </button>
+                    ${m.subject.toLowerCase().includes('password reset') ? `<button type="button" class="btn btn-sm btn-primary" style="padding:3px 8px;font-size:11px;white-space:nowrap;" onclick="openAdminMessageReview(${m.id})"><i class="fas fa-eye mr-1"></i>Inspect</button>` : ''}
+                </div>
             </td>
     </tr>`).join('');
+}
+
+async function openAdminMessageReview(messageId) {
+    const content = document.getElementById('adminOpportunityReviewContent');
+    if (!content) return;
+    content.innerHTML = '<div class="text-center text-muted py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading message...</div>';
+    showModal('adminOpportunityReview');
+    try {
+        const data = await apiFetch('admin_messages');
+        const message = (data.messages || []).find(item => Number(item.id) === Number(messageId));
+        if (!message) throw new Error('Message not found.');
+        const review = message.review_status || 'pending';
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Password Request</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="grid grid-2 gap-4 mb-6 bg-forest-light p-4 rounded-xl"><div><span class="text-xs text-muted block">Sender</span><strong>${escHtml(message.name)}</strong></div><div><span class="text-xs text-muted block">Email</span><strong>${escHtml(message.email)}</strong></div><div><span class="text-xs text-muted block">Received</span><strong>${fmtDate(message.created_at)}</strong></div><div><span class="text-xs text-muted block">Review</span><span class="badge ${review === 'verified' ? 'badge-success' : review === 'fraud' ? 'badge-danger' : 'badge-warning'}">${review}</span></div></div><h3 class="font-bold mb-2">${escHtml(message.subject)}</h3><p class="text-muted leading-relaxed mb-6" style="white-space:pre-wrap;">${escHtml(message.message)}</p><div class="flex-row gap-3 flex-wrap"><button type="button" class="btn btn-primary" onclick="verifyPasswordRequest(${message.id},'${escHtml(message.email)}')"><i class="fas fa-user-check mr-2"></i>Verify account</button><button type="button" class="btn btn-outline" onclick="reviewPasswordMessage(${message.id},'fraud')"><i class="fas fa-ban mr-2"></i>Reject as fraud</button>${review === 'verified' ? `<button type="button" class="btn btn-outline" onclick="resetVerifiedPassword('${escHtml(message.email)}',${message.id})"><i class="fas fa-key mr-2"></i>Reset password</button>` : ''}</div>`;
+    } catch (error) {
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Inspect Message</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-center text-danger py-8">${escHtml(error.message)}</p>`;
+    }
+}
+
+async function verifyPasswordRequest(messageId, email) {
+        try {
+            const data = await apiFetch('admin_verify_password_request', {}, 'POST', { email });
+            if (!data.success) {
+                toast(data.message || 'This request could not be verified.', 'error');
+                return;
+            }
+            const account = data.account;
+            const verified = confirm(`${data.message}\n\nAccount: ${account.name} (${account.email})\nRole: ${account.role}\n\nHave you independently verified the user's identity?`);
+            if (verified) await reviewPasswordMessage(messageId, 'verified');
+        } catch (error) {
+            toast(error.message || 'Could not verify the password request.', 'error');
+        }
+}
+
+async function reviewPasswordMessage(messageId, reviewStatus) {
+    const data = await apiFetch('admin_message_review', {}, 'POST', { id: messageId, review_status: reviewStatus });
+    if (!data.success) { toast(data.message || 'Could not review message.', 'error'); return; }
+    toast(data.message, 'success');
+    closeModal();
+    loadAdminMessages();
+}
+
+async function resetVerifiedPassword(email, messageId) {
+    const data = await apiFetch('admin_verify_password_request', {}, 'POST', { email });
+    if (!data.success) { toast(data.message || 'Account could not be verified.', 'error'); return; }
+    await resetAdminPassword(data.account.role, data.account.id, data.account.email);
+    await updateAdminMessageStatus(messageId, 'read');
 }
 
 async function updateAdminMessageStatus(id, status) {
@@ -870,7 +919,10 @@ function renderAdminUsersTable(users) {
           <td>
             <button class="btn btn-sm ${isActive ? '' : 'btn-primary'}" style="${isActive?'background:#fef3c7;color:#92400e;':''}; padding:4px 10px; font-size:12px;"
               onclick="toggleUserStatus('${u.role}',${u.id},'${isActive?'suspended':'active'}')">
-              ${isActive ? 'Suspend' : 'Activate'}
+                            ${isActive ? 'Suspend' : 'Activate'}
+                        </button>
+                        <button class="btn btn-sm btn-outline" style="padding:4px 10px; font-size:12px;" onclick="resetAdminPassword('${u.role}',${u.id},'${escHtml(u.email||'')}')">
+                            Reset password
             </button>
           </td>
         </tr>`;
@@ -882,6 +934,16 @@ async function toggleUserStatus(role, id, newStatus) {
     const data = await apiFetch('admin_toggle_user', {}, 'POST', { role, id, status: newStatus });
     if (data.success) { toast(data.message, 'success'); loadAdminUsers(); }
     else toast(data.message || 'Failed.', 'error');
+}
+
+async function resetAdminPassword(role, id, email) {
+    const password = prompt(`Set a temporary password for ${email}. Use at least 8 characters:`);
+    if (password === null) return;
+    if (password.length < 8) { toast('Password must be at least 8 characters.', 'error'); return; }
+    if (!confirm(`Change the password for ${email}? Verify the user's identity before continuing.`)) return;
+    const data = await apiFetch('admin_reset_password', {}, 'POST', { role, id, password });
+    if (data.success) toast(data.message, 'success');
+    else toast(data.message || 'Password change failed.', 'error');
 }
 
 function renderAdminOrgsTable(orgs) {
@@ -902,6 +964,7 @@ function renderAdminOrgsTable(orgs) {
                 ? `<button class="btn btn-sm" style="background:#fef3c7;color:#92400e;padding:4px 10px;font-size:12px;" onclick="verifyOrg(${o.id},'rejected')">Suspend</button>`
                 : `<button class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:12px;" onclick="verifyOrg(${o.id},'active')">Activate</button>`
             }
+            <button class="btn btn-outline btn-sm" style="padding:4px 10px;font-size:12px;" onclick="resetAdminPassword('organization',${o.id},'${escHtml(o.email||'')}')">Reset password</button>
           </td>
         </tr>`;
     }).join('');

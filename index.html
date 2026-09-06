@@ -966,7 +966,7 @@
             <div class="table-header">
               <div>
                 <span class="text-sm text-muted">Messages sent through the contact form</span>
-                <p class="text-xs text-muted mt-1">Review questions, suggestions, and partnership requests from visitors.</p>
+                <p class="text-xs text-muted mt-1">Inspect password requests, verify the account, or reject suspicious messages.</p>
               </div>
               <button class="btn btn-outline btn-sm" onclick="loadAdminMessages()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
             </div>
@@ -1103,7 +1103,7 @@
             placeholder="Enter password" required id="loginPassword"></div>
         <div class="flex-row items-center justify-between mb-6">
           <label class="flex-row items-center gap-2 text-sm"><input type="checkbox"> Remember me</label>
-          <a class="text-sm text-primary font-semibold hover-underline cursor-pointer">Forgot password?</a>
+          <button type="button" class="text-sm text-primary font-semibold hover-underline" style="background:none;border:0;padding:0;cursor:pointer;" onclick="contactAdmin()">Contact admin</button>
         </div>
         <button type="submit" class="btn btn-primary w-full mb-4">Sign In</button>
         <div class="text-center text-sm text-muted">Don't have an account? <a
