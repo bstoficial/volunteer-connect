@@ -102,6 +102,7 @@ volunteer-connect/
 │   └── reset-password.html
 │
 ├── backend/
+│   │
 │   ├── config/
 │   │   └── database.php
 │   │
@@ -133,12 +134,10 @@ volunteer-connect/
 │   ├── database_schema.sql
 │   └── complete_schema.sql
 │
-├── images/
-│
-└── uploads/
-    ├── opportunities/
-    └── profile/
-
+└── images/
+    └── uploads/
+        ├── opportunities/
+        └── profile/
 
 ## Database
 
@@ -442,7 +441,7 @@ The following features have been implemented:
 ## Team Members
 
 Bibesh Shahi Thakuri — Developer
-Sujan Timalsina** — Developer
+Sujan Timalsina — Developer
 
 ## Project Purpose
 
