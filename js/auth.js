@@ -3,7 +3,9 @@
  * All calls route to /backend/api/api.php?action=...
  */
 
-const AUTH_API = './backend/api/api.php';
+const AUTH_API = window.location.protocol === 'file:'
+    ? 'http://localhost/volunteerconnect/root/backend/api/api.php'
+    : './backend/api/api.php';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 async function apiCall(action, body = null, method = 'POST') {

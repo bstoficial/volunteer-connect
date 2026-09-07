@@ -6,7 +6,19 @@
 
 // 1. Send CORS and JSON Headers immediately before any output
 if (!headers_sent()) {
-    header('Access-Control-Allow-Origin: *');
+    $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $allowedOrigins = [
+        'null',
+        'http://localhost',
+        'http://127.0.0.1',
+        'https://localhost',
+        'https://127.0.0.1'
+    ];
+    if (in_array($requestOrigin, $allowedOrigins, true)) {
+        header('Access-Control-Allow-Origin: ' . $requestOrigin);
+        header('Vary: Origin');
+        header('Access-Control-Allow-Credentials: true');
+    }
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
     header('Content-Type: application/json; charset=UTF-8');

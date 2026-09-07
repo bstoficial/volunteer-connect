@@ -3,7 +3,9 @@
 // All data is fetched from /backend/api/api.php
 // ============================================================
 
-const API = './backend/api/api.php';
+const API = window.location.protocol === 'file:'
+    ? 'http://localhost/volunteerconnect/root/backend/api/api.php'
+    : './backend/api/api.php';
 const NEPAL_DISTRICTS = [
     'Achham', 'Arghakhanchi', 'Baglung', 'Baitadi', 'Bajhang', 'Bajura', 'Banke', 'Bara',
     'Bardiya', 'Bhaktapur', 'Bhojpur', 'Chitwan', 'Dadeldhura', 'Dailekh', 'Dang', 'Darchula',
