@@ -10,9 +10,11 @@ Finding suitable volunteer opportunities can sometimes be difficult because info
 
 The system has three main types of users:
 
-* **Volunteers** – Browse and apply for opportunities.
-* **Organizations** – Create opportunities and manage volunteer applications.
-* **Administrators** – Manage users, organizations, opportunities, and the overall platform.
+\* **\*\*Volunteers\*\*** – Browse and apply for opportunities.
+
+\* **\*\*Organizations\*\*** – Create opportunities and manage volunteer applications.
+
+\* **\*\*Administrators\*\*** – Manage users, organizations, opportunities, and the overall platform.
 
 ## Features
 
@@ -20,35 +22,53 @@ The system has three main types of users:
 
 Volunteers can:
 
-* Browse available volunteer opportunities.
-* Search opportunities by category and location.
-* View details about an opportunity before applying.
-* Apply to opportunities.
-* Track their application status.
-* Manage their profile.
-* Add their skills and personal information.
-* Upload a profile picture.
-* View completed volunteer opportunities and ratings.
+\* Browse available volunteer opportunities.
+
+\* Search opportunities by category and location.
+
+\* View details about an opportunity before applying.
+
+\* Apply to opportunities.
+
+\* Track their application status.
+
+\* Manage their profile.
+
+\* Add their skills and personal information.
+
+\* Upload a profile picture.
+
+\* View completed volunteer opportunities and ratings.
 
 Application statuses include:
 
-* Pending
-* Approved
-* Rejected
+\* Pending
+
+\* Approved
+
+\* Rejected
 
 ### For Organizations
 
 Organizations can:
 
-* Register on the platform.
-* Manage their organization profile.
-* Create volunteer opportunities.
-* Update or delete their opportunities.
-* Add details such as category, location, date, time, and available volunteer spots.
-* Add a Google Maps location.
-* View volunteer applications.
-* Approve or reject applications.
-* Monitor the number of available and filled volunteer positions.
+\* Register on the platform.
+
+\* Manage their organization profile.
+
+\* Create volunteer opportunities.
+
+\* Update or delete their opportunities.
+
+\* Add details such as category, location, date, time, and available volunteer spots.
+
+\* Add a Google Maps location.
+
+\* View volunteer applications.
+
+\* Approve or reject applications.
+
+\* Monitor the number of available and filled volunteer positions.
 
 Organization accounts need to be approved by an administrator before they can fully use the platform.
 
@@ -58,86 +78,157 @@ Administrators have access to the main management features of the platform.
 
 They can:
 
-* Review organization registration requests.
-* Approve or reject organizations.
-* Manage volunteer and organization accounts.
-* Monitor volunteer opportunities.
-* View contact messages submitted by users.
-* View platform activity and statistics.
-* Manage users and their account status.
+\* Review organization registration requests.
+
+\* Approve or reject organizations.
+
+\* Manage volunteer and organization accounts.
+
+\* Monitor volunteer opportunities.
+
+\* View contact messages submitted by users.
+
+\* View platform activity and statistics.
+
+\* Manage users and their account status.
 
 ## Technology Stack
 
 The project is built using the following technologies:
 
-* **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
-* **Backend:** PHP 7.4+
-* **Database:** MySQL 5.7+
-* **Web Server:** Apache
-* **Development Environment:** XAMPP
-* **Authentication:** PHP Sessions and JWT-based API authentication
+\* **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
+
+\* **Backend:** PHP 7.4+
+
+\* **Database:** MySQL 5.7+
+
+\* **Web Server:** Apache
+
+\* **Development Environment:** XAMPP
+
+\* **Authentication:** PHP Sessions and JWT-based API authentication
 
 The project does not depend on a frontend framework such as React or Angular. The frontend is developed using standard HTML, CSS, and JavaScript to keep the project simple and easy to understand.
 
 ## Project Structure
 
+```text
+
 volunteer-connect/
+
 │
+
 ├── index.html
+
 │
+
 ├── css/
-│   └── style.css
+
+│   └── style.css
+
 │
+
 ├── js/
-│   ├── script.js
-│   └── auth.js
+
+│   ├── script.js
+
+│   └── auth.js
+
 │
+
 ├── pages/
-│   ├── login.html
-│   ├── register.html
-│   ├── admin-dashboard.html
-│   ├── ngo-dashboard.html
-│   ├── volunteer-dashboard.html
-│   ├── opportunities.html
-│   └── reset-password.html
+
+│   ├── login.html
+
+│   ├── register.html
+
+│   ├── admin-dashboard.html
+
+│   ├── ngo-dashboard.html
+
+│   ├── volunteer-dashboard.html
+
+│   ├── opportunities.html
+
+│   └── reset-password.html
+
 │
+
 ├── backend/
-│   │
-│   ├── config/
-│   │   └── database.php
-│   │
-│   ├── api/
-│   │   └── api.php
-│   │
-│   ├── auth/
-│   │   ├── login.php
-│   │   ├── register.php
-│   │   ├── logout.php
-│   │   ├── middleware.php
-│   │   ├── forgot-password.php
-│   │   └── reset-password.php
-│   │
-│   ├── admin/
-│   │   └── dashboard.php
-│   │
-│   ├── ngo/
-│   │   ├── create-opportunity.php
-│   │   ├── update-opportunity.php
-│   │   └── delete-opportunity.php
-│   │
-│   └── volunteer/
-│       ├── applications.php
-│       └── apply.php
+
+│   ├── config/
+
+│   │   └── database.php
+
+│   │
+
+│   ├── api/
+
+│   │   └── api.php
+
+│   │
+
+│   ├── auth/
+
+│   │   ├── login.php
+
+│   │   ├── register.php
+
+│   │   ├── logout.php
+
+│   │   ├── middleware.php
+
+│   │   ├── forgot-password.php
+
+│   │   └── reset-password.php
+
+│   │
+
+│   ├── admin/
+
+│   │   └── dashboard.php
+
+│   │
+
+│   ├── ngo/
+
+│   │   ├── create-opportunity.php
+
+│   │   ├── update-opportunity.php
+
+│   │   └── delete-opportunity.php
+
+│   │
+
+│   └── volunteer/
+
+│       ├── applications.php
+
+│       └── apply.php
+
 │
+
 ├── database/
-│   ├── volunteerconnect.sql
-│   ├── database_schema.sql
-│   └── complete_schema.sql
+
+│   ├── volunteerconnect.sql
+
+│   ├── database_schema.sql
+
+│   └── complete_schema.sql
+
 │
-└── images/
-    └── uploads/
-        ├── opportunities/
-        └── profile/
+
+├── images/
+
+│
+
+└── uploads/
+
+    ├── opportunities/
+
+    └── profile/
+
+```
 
 ## Database
 
@@ -187,11 +278,15 @@ Stores important actions performed within the system for auditing purposes.
 
 Before running the project, make sure the following are installed:
 
-* XAMPP
-* Apache
-* MySQL
-* PHP 7.4 or higher
-* A modern web browser
+\* XAMPP
+
+\* Apache
+
+\* MySQL
+
+\* PHP 7.4 or higher
+
+\* A modern web browser
 
 ### Step 1: Copy the Project
 
@@ -199,28 +294,39 @@ Place the project folder inside the XAMPP `htdocs` directory.
 
 For example:
 
+```text
+
 C:\xampp\htdocs\volunteer-connect\
 
+```
 
 ### Step 2: Start XAMPP
 
 Open the XAMPP Control Panel and start:
 
-* Apache
-* MySQL
+\* Apache
+
+\* MySQL
 
 Both services should be running before opening the application.
 
 ### Step 3: Create the Database
 
-Open **phpMyAdmin** and create a database named:
+Open **\*\*phpMyAdmin\*\*** and create a database named:
+
+```text
 
 volunteerconnect
 
+```
 
 Import the following SQL file:
+
+```text
+
 database/complete_schema.sql
 
+```
 
 The SQL file creates the required tables and initial data for the application.
 
@@ -228,17 +334,25 @@ The SQL file creates the required tables and initial data for the application.
 
 Open:
 
+```text
+
 backend/config/database.php
 
+```
 
 Make sure the database configuration matches your local MySQL setup:
 
-php
+```php
+
 define('DB_HOST', 'localhost');
+
 define('DB_USER', 'root');
+
 define('DB_PASS', '');
+
 define('DB_NAME', 'volunteerconnect');
 
+```
 
 If your MySQL username or password is different, update the values accordingly.
 
@@ -246,9 +360,11 @@ If your MySQL username or password is different, update the values accordingly.
 
 After Apache and MySQL are running, open:
 
+```text
 
 http://localhost/volunteer-connect/
 
+```
 
 The Volunteer Connect application should now be accessible.
 
@@ -256,70 +372,101 @@ The Volunteer Connect application should now be accessible.
 
 For testing and development, the system includes a default administrator account.
 
+```text
+
 Email: admin@volunteerconnect.org
+
 Password: admin123
 
-Important: This default password should be changed before using the application in a real production environment.
+```
 
+**Important:** This default password should be changed before using the application in a real production environment.
 
 ## API
 
 The project uses a central API endpoint:
 
 ```text
+
 backend/api/api.php
+
 ```
 
 Different operations are handled using the `action` parameter.
 
 ### Authentication
 
-| Method | Action     | Description               |
-| ------ | ---------- | ------------------------- |
-| POST   | `login`    | Log in a user             |
-| POST   | `register` | Register a new user       |
-| GET    | `session`  | Check the current session |
-| POST   | `logout`   | Log out the current user  |
+\| Method | Action     | Description               |
+
+\| ------ | ------ | ----------- |
+
+\| POST   | `login`    | Log in a user             |
+
+\| POST   | `register` | Register a new user       |
+
+\| GET    | `session`  | Check the current session |
+
+\| POST   | `logout`   | Log out the current user  |
 
 ### Opportunities
 
-| Method | Action                 | Description                           |
-| ------ | ---------------------- | ------------------------------------- |
-| GET    | `get_opportunities`    | Get available opportunities           |
-| GET    | `get_opportunity&id=X` | Get details of a specific opportunity |
-| POST   | `create_opportunity`   | Create a new opportunity              |
-| POST   | `update_opportunity`   | Update an opportunity                 |
-| POST   | `delete_opportunity`   | Delete an opportunity                 |
+\| Method | Action                 | Description                           |
+
+\| ------ | ------ | ----------- |
+
+\| GET    | `get_opportunities`    | Get available opportunities           |
+
+\| GET    | `get_opportunity&id=X` | Get details of a specific opportunity |
+
+\| POST   | `create_opportunity`   | Create a new opportunity              |
+
+\| POST   | `update_opportunity`   | Update an opportunity                 |
+
+\| POST   | `delete_opportunity`   | Delete an opportunity                 |
 
 Opportunity creation, editing, and deletion are restricted to authorized organizations.
 
 ### Applications
 
-| Method | Action                      | Description                      |
-| ------ | --------------------------- | -------------------------------- |
-| GET    | `get_applications`          | Get applications                 |
-| POST   | `apply`                     | Apply for an opportunity         |
-| POST   | `update_application_status` | Approve or reject an application |
+\| Method | Action                      | Description                      |
+
+\| ------ | ------ | ----------- |
+
+\| GET    | `get_applications`          | Get applications                 |
+
+\| POST   | `apply`                     | Apply for an opportunity         |
+
+\| POST   | `update_application_status` | Approve or reject an application |
 
 ### Administrator
 
-| Method | Action                      | Description                             |
-| ------ | --------------------------- | --------------------------------------- |
-| GET    | `get_pending_organizations` | View organizations waiting for approval |
-| POST   | `approve_organization`      | Approve an organization                 |
-| POST   | `reject_organization`       | Reject an organization                  |
-| GET    | `get_all_users`             | View registered users                   |
+\| Method | Action                      | Description                             |
+
+\| ------ | --------------------------- | --------------------------------------- |
+
+\| GET    | `get_pending_organizations` | View organizations waiting for approval |
+
+\| POST   | `approve_organization`      | Approve an organization                 |
+
+\| POST   | `reject_organization`       | Reject an organization                  |
+
+\| GET    | `get_all_users`             | View registered users                   |
 
 ## Volunteer Opportunity Categories
 
 The platform currently supports the following categories:
 
-* Environment
-* Education
-* Healthcare
-* Community
-* Technology
-* Animals
+\* Environment
+
+\* Education
+
+\* Healthcare
+
+\* Community
+
+\* Technology
+
+\* Animals
 
 These categories can be used when creating and searching for volunteer opportunities.
 
@@ -337,20 +484,27 @@ The system has three main roles.
 
 Volunteers can:
 
-* Create and manage their profile.
-* Browse opportunities.
-* Apply for opportunities.
-* Track their applications.
-* View their completed opportunities.
+\* Create and manage their profile.
+
+\* Browse opportunities.
+
+\* Apply for opportunities.
+
+\* Track their applications.
+
+\* View their completed opportunities.
 
 ### 2. Organization
 
 Organizations can:
 
-* Create and manage opportunities.
-* View volunteer applications.
-* Approve or reject applications.
-* Track available volunteer positions.
+\* Create and manage opportunities.
+
+\* View volunteer applications.
+
+\* Approve or reject applications.
+
+\* Track available volunteer positions.
 
 Organizations must first be approved by an administrator.
 
@@ -358,38 +512,57 @@ Organizations must first be approved by an administrator.
 
 Administrators have access to the overall platform and can:
 
-* Manage users.
-* Review organizations.
-* Manage organization approval requests.
-* Monitor opportunities.
-* View contact messages.
-* View platform statistics.
+\* Manage users.
+
+\* Review organizations.
+
+\* Manage organization approval requests.
+
+\* Monitor opportunities.
+
+\* View contact messages.
+
+\* View platform statistics.
 
 ## Account Status
 
 The system uses different account statuses to control user access.
 
-| Status      | Description                                |
-| ----------- | ------------------------------------------ |
-| `pending`   | Account is waiting for approval            |
-| `active`    | Account is active and can use the platform |
-| `inactive`  | Account has been disabled                  |
-| `suspended` | Account has been temporarily suspended     |
-| `rejected`  | Organization registration was rejected     |
+\| Status      | Description                                |
+
+\| ------ | ----------- |
+
+\| `pending`   | Account is waiting for approval            |
+
+\| `active`    | Account is active and can use the platform |
+
+\| `inactive`  | Account has been disabled                  |
+
+\| `suspended` | Account has been temporarily suspended     |
+
+\| `rejected`  | Organization registration was rejected     |
 
 ## Security
 
 Several basic security measures have been implemented in the application, including:
 
-* Password hashing using bcrypt.
-* Session-based authentication.
-* JWT token support for API authentication.
-* Role-based access control.
-* Login attempt logging.
-* Input validation and sanitization.
-* Prepared SQL statements to reduce SQL injection risks.
-* CORS configuration for API requests.
-* Activity logging for important system actions.
+\* Password hashing using bcrypt.
+
+\* Session-based authentication.
+
+\* JWT token support for API authentication.
+
+\* Role-based access control.
+
+\* Login attempt logging.
+
+\* Input validation and sanitization.
+
+\* Prepared SQL statements to reduce SQL injection risks.
+
+\* CORS configuration for API requests.
+
+\* Activity logging for important system actions.
 
 ## Google Maps Integration
 
@@ -404,9 +577,13 @@ Users can upload profile pictures, while organizations can upload images related
 Uploaded files are stored in:
 
 ```text
+
 uploads/
+
 ├── opportunities/
+
 └── profile/
+
 ```
 
 The application should validate uploaded files before storing them to reduce security risks.
@@ -415,32 +592,54 @@ The application should validate uploaded files before storing them to reduce sec
 
 The following features have been implemented:
 
-* User registration and login
-* User logout
-* Session management
-* Role-based dashboards
-* Volunteer profiles
-* Organization registration
-* Organization approval workflow
-* Opportunity creation
-* Opportunity editing
-* Opportunity deletion
-* Opportunity browsing
-* Volunteer applications
-* Application approval and rejection
-* Application status tracking
-* Profile image upload
-* Opportunity image upload
-* Google Maps integration
-* Contact form
-* Admin management features
-* Platform statistics
-* Login attempt logging
-* Activity logging
+\* User registration and login
+
+\* User logout
+
+\* Session management
+
+\* Role-based dashboards
+
+\* Volunteer profiles
+
+\* Organization registration
+
+\* Organization approval workflow
+
+\* Opportunity creation
+
+\* Opportunity editing
+
+\* Opportunity deletion
+
+\* Opportunity browsing
+
+\* Volunteer applications
+
+\* Application approval and rejection
+
+\* Application status tracking
+
+\* Profile image upload
+
+\* Opportunity image upload
+
+\* Google Maps integration
+
+\* Contact form
+
+\* Admin management features
+
+\* Platform statistics
+
+\* Login attempt logging
+
+\* Activity logging
 
 ## Team Members
 
 Bibesh Shahi Thakuri — Developer
+
 Sujan Timalsina — Developer
 
 ## Project Purpose
@@ -450,7 +649,3 @@ Volunteer Connect was developed as an educational and community-focused project.
 The project demonstrates how a complete web application can connect different types of users, manage data through a relational database, provide role-based access, and handle common backend operations such as authentication, CRUD operations, file uploads, and application management.
 
 The long-term idea behind the project is to make it easier for people in Nepal to find opportunities where they can contribute their time and skills to their communities.
-
-
-This project is developed for educational and community service purposes.
-
