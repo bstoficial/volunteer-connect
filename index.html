@@ -1142,10 +1142,29 @@
           </div>
         </div>
         <div class="grid grid-2 gap-4 mb-4">
-          <div><label class="form-label">Full Name</label><input type="text" class="input-field" placeholder="Your name"
-              required id="regName"></div>
+          <div><label class="form-label" id="regNameLabel">Full Name</label><input type="text" class="input-field" placeholder="Your name"
+            required id="regName"><p class="text-xs text-muted mt-2" id="regNameHint">Use your legal name as it should appear on your profile.</p></div>
           <div><label class="form-label">Email</label><input type="email" class="input-field"
               placeholder="you@email.com" required id="regEmail"></div>
+        </div>
+        <div class="hidden" id="organizationDetails">
+          <p class="text-sm text-muted mb-3">Add a few details so volunteers can recognize and learn about your organization.</p>
+          <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label" for="regPhone">Phone</label><input type="tel" class="input-field"
+            placeholder="+977 98XXXXXXXX" id="regPhone"></div>
+          <div><label class="form-label" for="regCategory">Category</label><select class="input-field" id="regCategory">
+            <option value="General">General</option>
+            <option>Education</option>
+            <option>Environment</option>
+            <option>Healthcare</option>
+            <option>Community</option>
+            <option>Technology</option>
+            </select></div>
+          </div>
+          <div class="mb-4"><label class="form-label" for="regAddress">Address</label><input type="text" class="input-field"
+            placeholder="City, country" id="regAddress"></div>
+          <div class="mb-4"><label class="form-label" for="regDescription">About your organization</label><textarea class="input-field" rows="3"
+            placeholder="Tell volunteers what your organization does and the communities you serve." id="regDescription"></textarea></div>
         </div>
         <div class="mb-4"><label class="form-label">Password</label><input type="password" class="input-field"
             placeholder="Min 8 characters" required id="regPassword" minlength="8"></div>
@@ -1227,6 +1246,36 @@
     <div class="modal-content" id="oppDetailContent"></div>
   </div>
 
+  <!-- Volunteer Application Modal -->
+  <div class="modal-overlay hidden" id="modal-applicationForm" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="font-display text-2xl font-black">Volunteer Application</h2>
+        <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="text-muted mb-5" id="applicationOpportunityTitle">Complete this short form so the organization can review your request.</p>
+      <form onsubmit="submitOpportunityApplication(event)">
+        <input type="hidden" id="applicationOpportunityId">
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label">Full Name</label><input type="text" class="input-field" id="applicationFullName" required maxlength="255"></div>
+          <div><label class="form-label">Contact Number</label><input type="tel" class="input-field" id="applicationContactNumber" required maxlength="50"></div>
+        </div>
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label">Date of Birth</label><input type="date" class="input-field" id="applicationDateOfBirth" required></div>
+          <div><label class="form-label">Email</label><input type="email" class="input-field" id="applicationEmail" required maxlength="255"></div>
+        </div>
+        <div class="mb-4"><label class="form-label">Address</label><input type="text" class="input-field" id="applicationAddress" required maxlength="255"></div>
+        <div class="grid grid-2 gap-4 mb-4">
+          <div><label class="form-label">Gender</label><select class="input-field" id="applicationGender" required><option value="">Select...</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+          <div><label class="form-label">Qualification</label><input type="text" class="input-field" id="applicationQualification" placeholder="e.g., Bachelor's degree" required maxlength="255"></div>
+        </div>
+        <div class="mb-4"><label class="form-label">Social Media URL <span class="text-muted">(optional)</span></label><input type="url" class="input-field" id="applicationSocialUrl" placeholder="https://linkedin.com/in/your-name" maxlength="500"></div>
+        <div class="mb-6"><label class="form-label">Relevant Experience <span class="text-muted">(optional)</span></label><textarea class="input-field" id="applicationExperience" rows="3" maxlength="1000" placeholder="Tell the organization about relevant experience or skills."></textarea></div>
+        <button type="submit" class="btn btn-primary w-full">Submit Application</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Public Organization Profile Modal -->
   <div class="modal-overlay hidden" id="modal-organizationProfile" onclick="if(event.target===this)closeModal()">
     <div class="modal-content" id="organizationProfileContent"></div>
@@ -1235,6 +1284,11 @@
   <!-- Completed Opportunity Review Modal -->
   <div class="modal-overlay hidden" id="modal-applicationReview" onclick="if(event.target===this)closeModal()">
     <div class="modal-content" id="applicationReviewContent"></div>
+  </div>
+
+  <!-- Organization Application Details Modal -->
+  <div class="modal-overlay hidden" id="modal-organizationApplication" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content" id="organizationApplicationContent"></div>
   </div>
 
   <!-- Admin Opportunity Review Modal -->

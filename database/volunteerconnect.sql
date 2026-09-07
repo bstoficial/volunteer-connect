@@ -124,10 +124,13 @@ CREATE TABLE IF NOT EXISTS `applications` (
     `volunteer_id` INT NOT NULL,
     `opportunity_id` INT NOT NULL,
     `status` ENUM('pending', 'approved', 'rejected', 'waitlisted') DEFAULT 'pending',
+    `message` TEXT NULL,
     `applied_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`volunteer_id`) REFERENCES `volunteers`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`opportunity_id`) REFERENCES `opportunities`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `applications` ADD COLUMN IF NOT EXISTS `message` TEXT NULL AFTER `status`;
 
 CREATE TABLE IF NOT EXISTS `opportunity_reviews` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
