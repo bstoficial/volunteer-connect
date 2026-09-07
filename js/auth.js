@@ -75,6 +75,10 @@ async function handleRegister(event) {
     const role    = document.querySelector('input[name="regRole"]:checked')?.value || 'volunteer';
     const name    = document.getElementById('regName')?.value.trim() || '';
     const email   = document.getElementById('regEmail')?.value.trim() || '';
+    const phone   = document.getElementById('regPhone')?.value.trim() || '';
+    const address = document.getElementById('regAddress')?.value.trim() || '';
+    const description = document.getElementById('regDescription')?.value.trim() || '';
+    const category = document.getElementById('regCategory')?.value || 'General';
     const password        = document.getElementById('regPassword')?.value || '';
     const confirmPassword = document.getElementById('regConfirm')?.value || '';
 
@@ -93,7 +97,10 @@ async function handleRegister(event) {
     if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
 
     try {
-        const data = await apiCall('register', { role, name, email, password, confirm_password: confirmPassword });
+        const data = await apiCall('register', {
+            role, name, email, password, confirm_password: confirmPassword,
+            phone, address, description, category
+        });
 
         if (data.success) {
             toast(data.message || 'Account created! Please sign in.', 'success');
@@ -259,7 +266,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const regForm = document.querySelector('#modal-register form');
     if (regForm) regForm.onsubmit = handleRegister;
+
+    document.querySelectorAll('input[name="regRole"]').forEach((radio) => {
+        radio.addEventListener('change', updateRegistrationFields);
+    });
+    updateRegistrationFields();
 });
+
+function updateRegistrationFields() {
+    const isOrganization = document.querySelector('input[name="regRole"]:checked')?.value === 'organization';
+    document.getElementById('organizationDetails')?.classList.toggle('hidden', !isOrganization);
+
+    const nameLabel = document.getElementById('regNameLabel');
+    const nameInput = document.getElementById('regName');
+    const nameHint = document.getElementById('regNameHint');
+    if (nameLabel) nameLabel.textContent = isOrganization ? 'Organization Name' : 'Full Name';
+    if (nameInput) nameInput.placeholder = isOrganization ? 'Your organization name' : 'Your name';
+    if (nameHint) nameHint.textContent = isOrganization
+        ? 'Use the official name volunteers will see on your organization profile.'
+        : 'Use your legal name as it should appear on your profile.';
+}
 
 /* ── Exports ─────────────────────────────────────────────── */
 window.handleLogin       = handleLogin;
