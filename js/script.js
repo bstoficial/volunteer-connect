@@ -394,19 +394,42 @@ async function showOrganizationProfile(id) {
 async function applyToOpp(id) {
     const user = typeof getCurrentUserData === 'function' ? getCurrentUserData() : currentUser;
     if (!user) { closeModal(); showModal('login'); return; }
+    if (user.role !== 'volunteer') { toast('Only volunteers can apply for opportunities.', 'error'); return; }
+    const opportunity = allOpportunities.find(item => String(item.id) === String(id));
+    document.getElementById('applicationOpportunityId').value = id;
+    document.getElementById('applicationOpportunityTitle').textContent = opportunity ? `Applying for ${opportunity.title}. The organization will review your request.` : 'Complete this short form so the organization can review your request.';
+    document.getElementById('applicationFullName').value = user.name || '';
+    document.getElementById('applicationContactNumber').value = user.phone || '';
+    document.getElementById('applicationEmail').value = user.email || '';
+    document.getElementById('applicationAddress').value = user.location || '';
+    document.getElementById('applicationDateOfBirth').value = '';
+    document.getElementById('applicationGender').value = '';
+    document.getElementById('applicationQualification').value = '';
+    document.getElementById('applicationSocialUrl').value = '';
+    document.getElementById('applicationExperience').value = user.skills || '';
+    showModal('applicationForm');
+}
 
+async function submitOpportunityApplication(event) {
+    event.preventDefault();
+    const applicationForm = {
+        full_name: document.getElementById('applicationFullName').value.trim(),
+        contact_number: document.getElementById('applicationContactNumber').value.trim(),
+        date_of_birth: document.getElementById('applicationDateOfBirth').value,
+        email: document.getElementById('applicationEmail').value.trim(),
+        address: document.getElementById('applicationAddress').value.trim(),
+        gender: document.getElementById('applicationGender').value,
+        social_url: document.getElementById('applicationSocialUrl').value.trim(),
+        qualification: document.getElementById('applicationQualification').value.trim(),
+        experience: document.getElementById('applicationExperience').value.trim()
+    };
     try {
-        const data = await apiFetch('apply', {}, 'POST', { opportunity_id: id });
-        if (data.success) {
-            toast(data.message || 'Application submitted!', 'success');
-            closeModal();
-            await filterOpportunities();
-        } else {
-            toast(data.message || 'Could not apply.', 'error');
-        }
-    } catch (err) {
-        toast('Network error. Please try again.', 'error');
-    }
+        const data = await apiFetch('apply', {}, 'POST', { opportunity_id: document.getElementById('applicationOpportunityId').value, application_form: applicationForm });
+        if (!data.success) { toast(data.message || 'Could not apply.', 'error'); return; }
+        toast(data.message || 'Application submitted!', 'success');
+        closeModal();
+        await filterOpportunities();
+    } catch { toast('Network error. Please try again.', 'error'); }
 }
 
 // ── Volunteer Dashboard ───────────────────────────────────────
@@ -585,23 +608,66 @@ async function loadOrgAllOpportunities() {
 function renderOrgAppsTable(apps) {
     const tbody = document.getElementById('orgAppsTableBody');
     if (!tbody) return;
+    _orgApplications = apps;
     if (!apps.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No applications yet.</td></tr>'; return; }
 
     tbody.innerHTML = apps.map(a => {
         const badge = a.status==='approved'?'badge-success':a.status==='pending'?'badge-warning':a.status==='rejected'?'badge-danger':'badge-info';
+                const detailsButton = `<button type="button" class="btn btn-outline btn-sm" onclick="showOrgApplication(${a.id})"><i class="fas fa-file-alt mr-1"></i>View Application</button>`;
                 const actions = a.status === 'approved'
                         ? '<span class="badge badge-success"><i class="fas fa-check mr-1"></i>Approved</span>'
                         : a.status === 'rejected'
                                 ? '<span class="badge badge-danger"><i class="fas fa-times mr-1"></i>Rejected</span>'
                                 : `<button class="btn btn-primary btn-sm" onclick="updateOrgApp(${a.id},'approved')">Approve</button><button class="btn btn-outline btn-sm" style="margin-left:4px;" onclick="updateOrgApp(${a.id},'rejected')">Reject</button>`;
         return `<tr>
-          <td><strong>${escHtml(a.volunteer_name||'N/A')}</strong><div class="text-xs text-muted">${escHtml(a.volunteer_email||'')}</div></td>
+                    <td><button type="button" class="inline-link font-semibold" onclick="showOrgApplicantProfile(${a.id})"><i class="fas fa-user mr-1"></i>${escHtml(a.volunteer_name||'N/A')}</button><div class="text-xs text-muted">${escHtml(a.volunteer_email||'')}</div></td>
           <td>${escHtml(a.title||'')}</td>
           <td>${fmtDate(a.applied_at)}</td>
           <td><span class="badge ${badge}">${a.status}</span></td>
-                    <td>${actions}</td>
+                    <td>${detailsButton} ${actions}</td>
         </tr>`;
     }).join('');
+}
+
+let _orgApplications = [];
+function showOrgApplication(applicationId) {
+    const application = _orgApplications.find(item => String(item.id) === String(applicationId));
+    if (!application) return;
+    const details = application.application_form || {};
+    const rows = [['Full Name', details.full_name], ['Contact Number', details.contact_number], ['Date of Birth', details.date_of_birth], ['Email', details.email], ['Address', details.address], ['Gender', details.gender], ['Qualification', details.qualification], ['Relevant Experience', details.experience]];
+    const social = details.social_url ? `<p class="mt-3"><a class="text-primary" href="${escHtml(details.social_url)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-link mr-2"></i>Open social media profile</a></p>` : '';
+    const content = document.getElementById('organizationApplicationContent');
+    content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Application Details</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-muted mb-5">${escHtml(application.title)} · <button type="button" class="inline-link font-semibold" onclick="showOrgApplicantProfile(${application.id})">${escHtml(application.volunteer_name)}</button></p><div class="application-detail-grid grid grid-2 gap-4 bg-forest-light p-4 rounded-xl">${rows.map(([label, value]) => `<div class="application-detail-item"><span class="text-xs text-muted block">${label}</span><strong class="application-detail-value">${escHtml(value || 'Not provided')}</strong></div>`).join('')}</div>${social}<div class="flex-row gap-3 mt-6"><button class="btn btn-primary" onclick="closeModal();updateOrgApp(${application.id},'approved')"><i class="fas fa-check mr-2"></i>Approve</button><button class="btn btn-outline" onclick="closeModal();updateOrgApp(${application.id},'rejected')"><i class="fas fa-times mr-2"></i>Reject</button></div>`;
+    showModal('organizationApplication');
+}
+
+async function showOrgApplicantProfile(applicationId) {
+    const application = _orgApplications.find(item => String(item.id) === String(applicationId));
+    if (!application) {
+        try {
+            const response = await apiFetch('org_applications');
+            if (response.success) {
+                renderOrgAppsTable(response.applications || []);
+                return showOrgApplicantProfile(applicationId);
+            }
+        } catch { /* Show a useful message below. */ }
+        toast('Could not load this volunteer profile.', 'error');
+        return;
+    }
+    const content = document.getElementById('organizationApplicationContent');
+    content.innerHTML = '<div class="text-center text-muted py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading volunteer profile...</div>';
+    showModal('organizationApplication');
+    try {
+        const response = await apiFetch('volunteer_profile', { id: application.volunteer_id });
+        if (!response.success || !response.volunteer) throw new Error(response.message || 'Could not load volunteer profile.');
+        const volunteer = response.volunteer;
+        const image = volunteer.profile_image ? `<img class="public-volunteer-avatar" src="${escHtml(new URL(volunteer.profile_image, window.location.href).href)}" alt="${escHtml(volunteer.name)}">` : '<div class="public-volunteer-avatar public-volunteer-avatar-placeholder"><i class="fas fa-user"></i></div>';
+        const skills = volunteer.skills ? volunteer.skills.split(',').map(skill => skill.trim()).filter(Boolean).join(', ') : 'Not provided';
+        const rows = [['Email', volunteer.email], ['Phone', volunteer.phone], ['Location', volunteer.location], ['Skills', skills], ['Applications', volunteer.total_applications], ['Approved Applications', volunteer.approved_applications]];
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Volunteer Account Profile</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><div class="public-volunteer-header">${image}<div><h3 class="font-display text-xl font-black">${escHtml(volunteer.name)}</h3><p class="text-sm text-muted">Member since ${escHtml(fmtDate(volunteer.created_at))}</p></div></div><div class="application-detail-grid grid grid-2 gap-4 bg-forest-light p-4 rounded-xl">${rows.map(([label, value]) => `<div class="application-detail-item"><span class="text-xs text-muted block">${label}</span><strong class="application-detail-value">${escHtml(String(value || 'Not provided'))}</strong></div>`).join('')}</div><div class="bg-forest-light p-4 rounded-xl mt-4"><span class="text-xs text-muted block mb-2">About</span><p class="application-detail-value">${escHtml(volunteer.bio || 'No bio added yet.')}</p></div><p class="text-sm text-muted mt-4">Application for <strong>${escHtml(application.title)}</strong></p><div class="flex-row gap-3 mt-6"><button class="btn btn-primary" onclick="closeModal();updateOrgApp(${application.id},'approved')"><i class="fas fa-check mr-2"></i>Approve</button><button class="btn btn-outline" onclick="closeModal();updateOrgApp(${application.id},'rejected')"><i class="fas fa-times mr-2"></i>Reject</button></div>`;
+    } catch (error) {
+        content.innerHTML = `<div class="modal-header"><h2 class="font-display text-2xl font-black">Volunteer Account Profile</h2><button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button></div><p class="text-center text-danger py-8">${escHtml(error.message)}</p>`;
+    }
 }
 
 async function updateOrgApp(appId, status) {

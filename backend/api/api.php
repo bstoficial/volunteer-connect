@@ -188,6 +188,18 @@ case 'organization_profile':
     $stmt->bind_param('i',$organizationId);$stmt->execute();$organization['reviews']=$stmt->get_result()->fetch_all(MYSQLI_ASSOC);$stmt->close();
     jsonResponse(['success'=>true,'organization'=>$organization]);
 
+case 'volunteer_profile':
+    requireRole('organization');
+    $volunteerId=(int)($_GET['id']??0);
+    if(!$volunteerId) jsonResponse(['success'=>false,'message'=>'Invalid volunteer.'],400);
+    $stmt=$conn->prepare("SELECT v.id,v.name,v.email,v.phone,v.location,v.skills,v.bio,v.profile_image,v.created_at,(SELECT COUNT(*) FROM applications a WHERE a.volunteer_id=v.id) total_applications,(SELECT COUNT(*) FROM applications a WHERE a.volunteer_id=v.id AND a.status='approved') approved_applications FROM volunteers v WHERE v.id=? AND v.status='active' AND EXISTS (SELECT 1 FROM applications va JOIN opportunities vo ON vo.id=va.opportunity_id WHERE va.volunteer_id=v.id AND vo.organization_id=?) LIMIT 1");
+    $stmt->bind_param('ii',$volunteerId,$_SESSION['user_id']);$stmt->execute();$volunteer=$stmt->get_result()->fetch_assoc();$stmt->close();
+    if(!$volunteer) jsonResponse(['success'=>false,'message'=>'Volunteer profile not found.'],404);
+    $volunteer['id']=(int)$volunteer['id'];
+    $volunteer['total_applications']=(int)$volunteer['total_applications'];
+    $volunteer['approved_applications']=(int)$volunteer['approved_applications'];
+    jsonResponse(['success'=>true,'volunteer'=>$volunteer]);
+
 case 'review_info':
     requireRole('volunteer');
     $opportunityId=(int)($data['opportunity_id']??$_GET['opportunity_id']??0);
@@ -214,13 +226,27 @@ case 'submit_review':
 
 case 'apply':
     requireRole('volunteer'); $opp=(int)($data['opportunity_id']??0); if(!$opp) jsonResponse(['success'=>false,'message'=>'Invalid opportunity.'],400);
+    $applicationForm=$data['application_form']??[];
+    $fullName=trim($applicationForm['full_name']??'');$contactNumber=trim($applicationForm['contact_number']??'');$dateOfBirth=trim($applicationForm['date_of_birth']??'');$email=trim($applicationForm['email']??'');$address=trim($applicationForm['address']??'');$gender=trim($applicationForm['gender']??'');$socialUrl=trim($applicationForm['social_url']??'');$qualification=trim($applicationForm['qualification']??'');$experience=trim($applicationForm['experience']??'');
+    if($fullName===''||$contactNumber===''||$dateOfBirth===''||!filter_var($email,FILTER_VALIDATE_EMAIL)||$address===''||$gender===''||$qualification==='')
+        jsonResponse(['success'=>false,'message'=>'Please complete all required application fields.'],400);
+    $dob=DateTime::createFromFormat('!Y-m-d',$dateOfBirth);$dobErrors=DateTime::getLastErrors();
+    if(!$dob||($dobErrors&&($dobErrors['warning_count']>0||$dobErrors['error_count']>0))||$dob->format('Y-m-d')!==$dateOfBirth||$dateOfBirth>=date('Y-m-d'))
+        jsonResponse(['success'=>false,'message'=>'Please provide a valid date of birth.'],400);
+    if($socialUrl!==''&&!filter_var($socialUrl,FILTER_VALIDATE_URL)) jsonResponse(['success'=>false,'message'=>'Please provide a valid social media URL.'],400);
+    foreach([$fullName,$contactNumber,$dateOfBirth,$email,$address,$gender,$socialUrl,$qualification,$experience] as $value) if(strlen($value)>1000) jsonResponse(['success'=>false,'message'=>'Application details are too long.'],400);
+    $applicationMessage=json_encode(['full_name'=>$fullName,'contact_number'=>$contactNumber,'date_of_birth'=>$dateOfBirth,'email'=>$email,'address'=>$address,'gender'=>$gender,'social_url'=>$socialUrl,'qualification'=>$qualification,'experience'=>$experience],JSON_UNESCAPED_SLASHES);
     $stmt=$conn->prepare("SELECT id,spots_needed,status FROM opportunities WHERE id=?");$stmt->bind_param('i',$opp);$stmt->execute();$o=$stmt->get_result()->fetch_assoc();$stmt->close();
     if(!$o||$o['status']!=='active') jsonResponse(['success'=>false,'message'=>'Opportunity is not available.'],404);
     $stmt=$conn->prepare("SELECT id FROM applications WHERE volunteer_id=? AND opportunity_id=?");$stmt->bind_param('ii',$_SESSION['user_id'],$opp);$stmt->execute();$exists=$stmt->get_result()->fetch_assoc();$stmt->close();
     if($exists) jsonResponse(['success'=>false,'message'=>'You have already applied for this opportunity.'],409);
     $stmt=$conn->prepare("SELECT COUNT(*) c FROM applications WHERE opportunity_id=? AND status='approved'");$stmt->bind_param('i',$opp);$stmt->execute();$count=$stmt->get_result()->fetch_assoc()['c'];$stmt->close();
     $status=((int)$count >= (int)$o['spots_needed'])?'waitlisted':'pending';
-    $stmt=$conn->prepare("INSERT INTO applications(opportunity_id,volunteer_id,status) VALUES(?,?,?)");$stmt->bind_param('iis',$opp,$_SESSION['user_id'],$status);$stmt->execute();$id=$stmt->insert_id;$stmt->close();
+    $stmt=$conn->prepare("INSERT INTO applications(opportunity_id,volunteer_id,status,message) VALUES(?,?,?,?)");
+    if(!$stmt) jsonResponse(['success'=>false,'message'=>'Could not prepare your application. Please try again after the database has been updated.'],500);
+    $stmt->bind_param('iiss',$opp,$_SESSION['user_id'],$status,$applicationMessage);
+    if(!$stmt->execute()) { $stmt->close(); jsonResponse(['success'=>false,'message'=>'Could not submit your application. Please try again.'],500); }
+    $id=$stmt->insert_id;$stmt->close();
     audit($conn,'apply_opportunity','Application #'.$id.' submitted');
     jsonResponse(['success'=>true,'message'=>'Application submitted successfully!','status'=>$status]);
 
@@ -353,8 +379,9 @@ case 'delete_opportunity':
 
 case 'org_applications':
     requireRole('organization');
-    $stmt=$conn->prepare("SELECT a.id,a.status,a.applied_at,o.title,v.id volunteer_id,v.name volunteer_name,v.email volunteer_email,v.location,v.skills FROM applications a JOIN opportunities o ON o.id=a.opportunity_id JOIN volunteers v ON v.id=a.volunteer_id WHERE o.organization_id=? ORDER BY a.applied_at DESC");
+    $stmt=$conn->prepare("SELECT a.id,a.status,a.applied_at,a.message,o.title,v.id volunteer_id,v.name volunteer_name,v.email volunteer_email,v.location,v.skills FROM applications a JOIN opportunities o ON o.id=a.opportunity_id JOIN volunteers v ON v.id=a.volunteer_id WHERE o.organization_id=? ORDER BY a.applied_at DESC");
     $stmt->bind_param('i',$_SESSION['user_id']);$stmt->execute();$rows=$stmt->get_result()->fetch_all(MYSQLI_ASSOC);$stmt->close();
+    foreach($rows as &$row){$details=json_decode($row['message']??'',true);$row['application_form']=is_array($details)?$details:[];unset($row['message']);}
     jsonResponse(['success'=>true,'applications'=>$rows]);
 
 case 'update_application':

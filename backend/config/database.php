@@ -175,6 +175,18 @@ function migrateApplicationTables($conn) {
     }
     $conn->query("ALTER TABLE opportunities MODIFY COLUMN status ENUM('pending','active','closed','rejected','draft') NOT NULL DEFAULT 'pending'");
 
+    $applications = $conn->query("SHOW TABLES LIKE 'applications'");
+    if ($applications && $applications->num_rows > 0) {
+        $applicationColumns = [];
+        $result = $conn->query("SHOW COLUMNS FROM applications");
+        if ($result) {
+            while ($column = $result->fetch_assoc()) $applicationColumns[$column['Field']] = true;
+        }
+        if (!isset($applicationColumns['message'])) {
+            $conn->query("ALTER TABLE applications ADD COLUMN message TEXT NULL AFTER status");
+        }
+    }
+
     $conn->query("CREATE TABLE IF NOT EXISTS opportunity_reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
         opportunity_id INT NOT NULL,
