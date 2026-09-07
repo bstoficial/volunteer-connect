@@ -512,7 +512,7 @@ Sujan Timalsina — Developer
 
 ## Project Purpose
 
-Volunteer Connect was developed as an educational and community-focused project.
+Volunteer Connect is developed as an educational and community-focused project.
 
 The project demonstrates how a complete web application can connect different types of users, manage data through a relational database, provide role-based access, and handle common backend operations such as authentication, CRUD operations, file uploads, and application management.
 
