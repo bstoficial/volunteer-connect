@@ -508,7 +508,7 @@ The following features have been implemented:
 ## Team Members
 
 Bibesh Shahi Thakuri — Developer  
-Sujan Timalsina** — Developer
+Sujan Timalsina — Developer
 
 ## Project Purpose
 
