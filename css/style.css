@@ -294,9 +294,6 @@ button, input, select, textarea { font-family: inherit; }
 .bg-gradient-amber { background: linear-gradient(135deg, #FFC107, #FFB300); }
 .step-number { font-size: 3rem; font-weight: 900; margin-bottom: 0.5rem; line-height: 1; }
 
-.banner-dark { background: linear-gradient(135deg, var(--forest-900), var(--forest-700)); }
-.stat-box-dark { text-align: center; padding: 1.5rem; border-radius: 16px; background: rgba(255,255,255,0.05); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
-
 .testimonial-card { border-radius: 16px; padding: 2rem; border: 1px solid var(--border); position: relative; }
 .quote-icon { position: absolute; top: 1.5rem; right: 1.5rem; font-size: 2.25rem; }
 .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
